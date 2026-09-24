@@ -13,6 +13,7 @@ Firefox extension (MV3, TypeScript) for desktop and Android. The popup is where 
 - `src/background.ts` queues, sends and retries: every 5 minutes while anything waits, when the popup opens, and at browser startup.
 - `src/popup/` is the popup UI. It also runs as a tab, `popup.html?tab=<id>`, which is how Android shows it.
 - `src/options/` is the settings page, with the server address.
+- `src/chip/` is the Android selection chip, a content script. `place.ts` keeps it on screen at any zoom.
 - `static/` is copied into `dist/` as is: the manifest, HTML, CSS and icon.
 
 ## Commands
@@ -44,3 +45,16 @@ To install on Firefox for Android (confirmed on a phone):
 2. In Firefox, go to Settings, About Firefox, and tap the Firefox logo 5 times to turn on the debug menu.
 3. Back in Settings, open "Install extension from file" and pick the `.xpi`.
 4. In Add-ons, tab-squasher, set the server address.
+
+## Debugging on Android
+
+Plug the phone in over USB and turn on "Remote debugging via USB" in Firefox's settings. Once `adb devices` lists the phone, open `about:debugging` in desktop Firefox, connect to the phone, and click Inspect on tab-squasher. Web pages open on the phone are listed there too.
+
+`browser is not defined` in the extension's console means the background script is asleep: MV3 background scripts stop when idle. Open the Spark tab on the phone to wake it, then run the command again. The console's frame picker can also switch to an open extension page, which has `browser` as well.
+
+Useful checks:
+
+- `await browser.scripting.getRegisteredContentScripts()` in the extension's console lists `spark-chip` once the chip is registered.
+- `document.querySelector('tab-squasher-chip')` in a page's console finds the chip while text is selected. If it's there but you can't see it, compare `innerWidth` with `visualViewport.width` and `visualViewport.scale`.
+
+A warning about the `menus` permission (`Value "menus" must either ...`) appears on every load. It's harmless. Firefox for Android has no context-menu API, so it drops the permission and loads the rest of the manifest. The desktop right-click item needs `menus`, and a manifest can't list permissions per platform, so the warning stays unless Android gets its own build. The code calls `browser.menus?.` so Android skips it.

@@ -62,7 +62,7 @@ Decisions made while implementing without the user around. Each lists the option
 
 **Testing the entry points.** The chip e2e test injects `chip.js` by hand, since Firefox in the sandbox is desktop. It then taps the button and checks that the Spark tab opens for the right page. The desktop "Spark this" menu item isn't covered: WebDriver can't open context menus, and `openPopup()` needs a real user action. It's three lines. Check it by hand with `npm run dev:desktop`.
 
-**Where the chip sits.** It's fixed bottom-right, 80 px up, as in the spike, which you said looked good. It could hide something the page puts in that corner. Moving it next to the selection is possible later but fiddly on mobile.
+**Where the chip sits.** Bottom-right of the screen, 16 px in and 80 px up, as in the spike, which you said looked good. It follows the visual viewport and scales by 1/zoom, since `position: fixed` alone put it below the screen on wide pages. A `:host` reset keeps page CSS from hiding it. It could hide something the page puts in that corner. Moving it next to the selection is possible later but fiddly on mobile.
 
 ## Host install (#3)
 
