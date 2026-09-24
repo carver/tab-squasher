@@ -85,3 +85,15 @@ Decisions made while implementing without the user around. Each lists the option
 **Invalid Inbox lines.** They're logged on every run and never recorded in the ledger. The server validates everything it writes, so this shouldn't happen. If it ever does, the log keeps saying so until someone looks.
 
 **Crash between writing cards and the ledger.** A rerun would send the same Sparks to the model again, and front-dedupe only catches identical wording. This is the same risk hand-written notes already had.
+
+## Signing (#8)
+
+**Where the AMO keys live.** Options: environment variables in a shell profile; a gitignored file; the desktop keyring through `secret-tool`. Picked: the keyring. Nothing on disk, and the keys never reach the sandbox. It needs `libsecret-tools` on the host, and the desktop keyring has to be unlocked, so signing won't work from cron.
+
+**Version numbers.** `npm run sign` bumps the patch version first, because AMO refuses a version it has already signed. If signing fails partway, `--no-bump` retries the same number.
+
+**Source upload.** AMO treats bundled TypeScript output as generated code and asks for the source, so every signing uploads a zip of `extension/` and `spec/` from the working tree.
+
+**Updates.** Options: reinstall by hand; have the tab-squasher server host an `update_url` manifest so Firefox updates itself. Picked: by hand for now. An `update_url` would put a fixed tailnet address into the signed build.
+
+**Installing on Android.** The wizard's steps (the debug menu via 5 taps on the logo in About Firefox, then "Install extension from file") are from memory and unverified, and the wizard says so. Nothing here was run: signing needs your Mozilla account.

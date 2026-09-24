@@ -29,3 +29,13 @@ npm run dev:android  # web-ext run on a phone over adb, from the host
 `../install_sandbox.sh` downloads the Firefox and geckodriver the e2e tests use into `~/.cache/tab-squasher`. `FIREFOX_BIN` and `GECKODRIVER` override those paths.
 
 The e2e tests open extension pages from Firefox's chrome context, because WebDriver refuses to navigate to `moz-extension://` URLs (Firefox 156). They drive the popup as a tab, since WebDriver can't click the toolbar button. The toolbar popup itself is covered by manual testing.
+
+## Signing and installing (ADR 0002)
+
+On the host, the first time: `./scripts/amo-wizard.sh`. It gets AMO API credentials and stores them in your keyring with `secret-tool`. It then signs the first version and walks through installing it on desktop and Android.
+
+After that, `npm run sign` on the host bumps the patch version, runs lint and the unit tests, and signs on AMO's unlisted channel. It uploads the source alongside the build, since the bundle is generated from TypeScript. The signed `.xpi` lands in `artifacts/` (gitignored). Commit the version bump afterwards. `./scripts/sign.sh --no-bump` retries a failed attempt without using up a version number.
+
+Updates are manual for now: sign, then install the new `.xpi` over the old one on each device.
+
+Installing the signed file on Firefox for Android isn't confirmed on a real phone yet. The wizard's Android stage has the expected steps; update this section with what actually works.
