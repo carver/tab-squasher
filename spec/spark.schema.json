@@ -1,0 +1,71 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/carver/tab-squasher/blob/main/spec/spark.schema.json",
+  "title": "Spark",
+  "description": "One Spark as the extension sends it. See spec/README.md. The 64 KB size limit is not expressible here; every validator checks it separately.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["v", "id", "destination", "note", "quote", "selection", "source", "captured_at"],
+  "properties": {
+    "v": { "const": 1 },
+    "id": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$"
+    },
+    "destination": { "const": "anki" },
+    "note": { "$ref": "#/$defs/trimmedTextOrNull" },
+    "quote": { "$ref": "#/$defs/trimmedTextOrNull" },
+    "selection": {
+      "oneOf": [
+        { "type": "null" },
+        { "type": "string", "pattern": "\\S" }
+      ]
+    },
+    "source": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["url", "title", "video_seconds"],
+      "properties": {
+        "url": { "type": "string", "pattern": "^https?://[^\\s/]+" },
+        "title": { "$ref": "#/$defs/trimmedTextOrNull" },
+        "video_seconds": {
+          "oneOf": [
+            { "type": "null" },
+            { "type": "number", "minimum": 0 }
+          ]
+        }
+      }
+    },
+    "captured_at": { "$ref": "#/$defs/utcTimestamp" }
+  },
+  "allOf": [
+    {
+      "description": "A Spark needs a Note, a Quote, or both.",
+      "anyOf": [
+        { "properties": { "note": { "type": "string" } } },
+        { "properties": { "quote": { "type": "string" } } }
+      ]
+    },
+    {
+      "description": "A Selection is kept exactly when there is a Quote.",
+      "oneOf": [
+        { "properties": { "quote": { "type": "null" }, "selection": { "type": "null" } } },
+        { "properties": { "quote": { "type": "string" }, "selection": { "type": "string" } } }
+      ]
+    }
+  ],
+  "$defs": {
+    "trimmedTextOrNull": {
+      "description": "null, or a string with no leading or trailing whitespace and at least one other character. Empty text is sent as null.",
+      "oneOf": [
+        { "type": "null" },
+        { "type": "string", "pattern": "^\\S(?:[\\s\\S]*\\S)?$" }
+      ]
+    },
+    "utcTimestamp": {
+      "description": "RFC 3339 in UTC with a Z suffix, as JavaScript's Date.toISOString() produces.",
+      "type": "string",
+      "pattern": "^\\d{4}-(0[1-9]|1[0-2])-(0[1-9]|[12]\\d|3[01])T([01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(\\.\\d{1,9})?Z$"
+    }
+  }
+}

@@ -1,0 +1,27 @@
+#!/usr/bin/env bash
+# Lint and fast tests for whatever parts of the repo the commit touches.
+# Enable once per clone: git config core.hooksPath .githooks
+set -euo pipefail
+cd "$(git rev-parse --show-toplevel)"
+
+staged=$(git diff --cached --name-only --diff-filter=ACMRD)
+touches() { grep -q "^$1" <<<"$staged"; }
+
+if touches spec/; then
+  echo "pre-commit: spec fixtures up to date?"
+  python3 spec/make_fixtures.py >/dev/null
+  git diff --quiet -- spec/fixtures || {
+    echo "spec/fixtures differs from make_fixtures.py output; review and stage it" >&2
+    exit 1
+  }
+fi
+
+if touches server/ || touches spec/; then
+  echo "pre-commit: server"
+  (cd server && cargo fmt --check && cargo clippy -q --all-targets -- -D warnings && cargo test -q)
+fi
+
+if [ -d extension ] && { touches extension/ || touches spec/; }; then
+  echo "pre-commit: extension"
+  (cd extension && npm run -s lint && npm test -s)
+fi

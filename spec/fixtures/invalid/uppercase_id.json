@@ -1,0 +1,14 @@
+{
+  "v": 1,
+  "id": "3F0C1D9E-6A57-4E57-9D64-2B1B4F0F6C11",
+  "destination": "anki",
+  "note": "Debezium streams row changes out of Postgres",
+  "quote": "Debezium is a set of distributed services ... [that capture] row-level changes",
+  "selection": "Debezium is a set of distributed services to capture changes in your databases so that your applications can see those changes and respond to them. Debezium records all row-level changes",
+  "source": {
+    "url": "https://debezium.io/documentation/reference/stable/architecture.html",
+    "title": "Debezium Architecture",
+    "video_seconds": null
+  },
+  "captured_at": "2026-09-24T03:12:45.120Z"
+}

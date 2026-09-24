@@ -1,0 +1,8 @@
+# The Inbox and other runtime data. Personal browsing data, never committed.
+/data/
+
+/server/target/
+/extension/node_modules/
+/extension/dist/
+/extension/artifacts/
+__pycache__/
