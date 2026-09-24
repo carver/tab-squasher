@@ -12,7 +12,34 @@ Receives Sparks from the extension and appends them to the Inbox, one JSON Lines
   - 413 when the body is over 64 KB.
 - `GET /health` returns `{"status": "ok", "version"}`.
 
-## Run
+## Install on the host
+
+First time: `./tailscale-wizard.sh`. It turns on MagicDNS and HTTPS certificates for the tailnet, lets your user manage `tailscale serve`, runs the installer, and has you check the address from your phone. It assumes Tailscale is already set up on the laptop and phone (`rental-finder/scripts/tailscale-wizard.sh` covers that).
+
+After that, `./install-host.sh` does everything, and running it again upgrades in place. It:
+
+- builds with `cargo build --release` into `~/.cache/tab-squasher/host-target`, apart from the sandbox's builds in `target/`, and copies the binary to `~/.local/lib/tab-squasher/`
+- installs and restarts the systemd user unit `tab-squasher.service`, with the Inbox at `<repo>/data/inbox`
+- runs `loginctl enable-linger`, so the service runs without anyone logged in
+- runs `tailscale serve --bg --https=8443 http://127.0.0.1:3816`
+- checks `/health` on loopback and on the tailnet, and prints the address for the extension's settings
+
+It refuses to run inside the sandbox. `./install-host.sh --uninstall` removes the service and the serve config, and leaves the Inbox alone.
+
+Logs: `journalctl --user -u tab-squasher`.
+
+## "Can't reach the server"
+
+Check in this order, and stop at the first one that fails:
+
+1. The service: `systemctl --user status tab-squasher`
+2. Loopback: `curl http://127.0.0.1:3816/health` on the laptop
+3. Serve: `tailscale serve status` should list `https://<name>:8443` proxying to `127.0.0.1:3816`
+4. The client: is the phone's Tailscale app connected? Try `https://<name>:8443/health` in its browser.
+
+If 1 to 3 pass, the problem is on the client's side.
+
+## Run by hand
 
 ```bash
 cargo build --release

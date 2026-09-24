@@ -63,3 +63,25 @@ Decisions made while implementing without the user around. Each lists the option
 **Testing the entry points.** The chip e2e test injects `chip.js` by hand, since Firefox in the sandbox is desktop. It then taps the button and checks that the Spark tab opens for the right page. The desktop "Spark this" menu item isn't covered: WebDriver can't open context menus, and `openPopup()` needs a real user action. It's three lines. Check it by hand with `npm run dev:desktop`.
 
 **Where the chip sits.** It's fixed bottom-right, 80 px up, as in the spike, which you said looked good. It could hide something the page puts in that corner. Moving it next to the selection is possible later but fiddly on mobile.
+
+## Host install (#3)
+
+**Untested on the real host.** `install-host.sh` ran here against stub `systemctl`, `loginctl`, `tailscale`, `sudo` and `curl` commands, with a temporary HOME. That caught one bug: `$USER` is unset in some shells, and `set -u` stopped the script. The real systemd, linger and `tailscale serve` steps run for the first time on your laptop.
+
+**Where host builds go.** Options: build in `server/target` like the sandbox; use a separate cargo target dir. Picked: separate (`~/.cache/tab-squasher/host-target`). The sandbox builds on the same mount against its own glibc, and each side would otherwise overwrite the other's binaries. The service runs a copy in `~/.local/lib/tab-squasher`, so rebuilding never touches the running binary.
+
+**systemd hardening.** Options: `ProtectSystem=strict`, `PrivateTmp` and friends; only `NoNewPrivileges`. Picked: only `NoNewPrivileges`. Several sandboxing options need user namespaces in user units and fail to start on some kernels, and I can't test it here. Worth tightening once it runs on the laptop.
+
+**Port 8443 on the tailnet.** Serving on a dedicated HTTPS port keeps `tailscale serve`'s 443 free for anything else. If you'd rather use 443, change `HTTPS_PORT` in the script and the address in the extension.
+
+**Wizard scope.** The rental-finder Tailscale wizard already covers installing Tailscale, adding the phone and disabling key expiry, so this one only adds HTTPS certificates, the serve operator, the install and the phone check. The Tailscale admin page steps ("Enable HTTPS" on the DNS page) come from my knowledge of the Tailscale UI, not from checking it today.
+
+## anki-cards (#9)
+
+**Validating Inbox lines.** Options: a third hand-written validator in Python; jsonschema against tab-squasher's `spec/spark.schema.json`. Picked: the schema, so there's one source of truth. Python's `re` doesn't follow ECMA-262 regex rules (`$` matches before a final newline, `\d` matches any Unicode digit), so the `pattern` keyword runs on `regress`, an ECMA engine. Two new invalid fixtures pin that down for every validator. Cost: anki-cards needs `jsonschema` and `regress`, which its `install_sandbox.py` now installs.
+
+**Traceability.** Cards from a Spark carry `spark_id` in `cards.jsonl`. `import_cards.py` ignores fields it doesn't know.
+
+**Invalid Inbox lines.** They're logged on every run and never recorded in the ledger. The server validates everything it writes, so this shouldn't happen. If it ever does, the log keeps saying so until someone looks.
+
+**Crash between writing cards and the ledger.** A rerun would send the same Sparks to the model again, and front-dedupe only catches identical wording. This is the same risk hand-written notes already had.
