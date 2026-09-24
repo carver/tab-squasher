@@ -2,20 +2,24 @@
 # Lint and fast tests for whatever parts of the repo the commit touches.
 # Enable once per clone: git config core.hooksPath .githooks
 set -euo pipefail
-cd "$(git rev-parse --show-toplevel)"
+repo=$(git rev-parse --show-toplevel)
+cd "$repo"
 
 staged=$(git diff --cached --name-only --diff-filter=ACMRD)
 touches() { grep -q "^$1" <<<"$staged"; }
-
-# Check what is being committed, not the working tree: set unstaged edits to
-# tracked files aside until the hook finishes. Only stash when there is
-# something to stash, or the pop would take an older, unrelated stash.
-if ! git diff --quiet; then
-  git stash push --keep-index --quiet --message "pre-commit: unstaged changes"
-  trap 'git stash pop --quiet' EXIT
-fi
-
 staged_shell=$(git diff --cached --name-only --diff-filter=ACMR -- '*.sh' '.githooks/*')
+
+# Check what is being committed, not the working tree: export the index to a
+# copy and run everything there. The working tree is never written to, so
+# edits made meanwhile (an editor, a script on the host) are safe. The path
+# is fixed so cargo reuses its build cache.
+git_dir=$(git rev-parse --absolute-git-dir)
+copy="$git_dir/pre-commit-tree"
+rm -rf "$copy"
+git checkout-index --all --prefix="$copy/"
+cd "$copy"
+in_copy() { git --git-dir="$git_dir" --work-tree="$copy" "$@"; }
+
 if [ -n "$staged_shell" ]; then
   echo "pre-commit: shellcheck"
   # SC2034: the wizard library defines colors that not every wizard uses.
@@ -27,18 +31,20 @@ if touches spec/; then
   echo "pre-commit: spec fixtures up to date?"
   python3 -m pyflakes spec/make_fixtures.py
   python3 spec/make_fixtures.py >/dev/null
-  git diff --quiet -- spec/fixtures || {
-    echo "spec/fixtures differs from make_fixtures.py output; review and stage it" >&2
+  if ! in_copy diff --quiet -- spec/fixtures || [ -n "$(in_copy ls-files --others -- spec/fixtures)" ]; then
+    echo "spec/fixtures differs from make_fixtures.py output; run it, review and stage" >&2
     exit 1
-  }
+  fi
 fi
 
 if touches server/ || touches spec/; then
   echo "pre-commit: server"
+  export CARGO_TARGET_DIR="$repo/server/target"
   (cd server && cargo fmt --check && cargo clippy -q --all-targets -- -D warnings && cargo test -q)
 fi
 
 if [ -d extension ] && { touches extension/ || touches spec/; }; then
   echo "pre-commit: extension"
+  ln -s "$repo/extension/node_modules" extension/node_modules
   (cd extension && npm run -s lint && npm test -s)
 fi
