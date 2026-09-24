@@ -4,13 +4,14 @@
 // button asks the background to open the popup page as a tab.
 
 import type { Message } from "../lib/messages";
+import { placeChip } from "./place";
 
 // Page CSS can still style the host element; hiding undefined custom
 // elements is common. Important rules from inside the shadow root win.
 const STYLE = `
   :host { all: initial !important; }
   button {
-    position: fixed; bottom: 80px; right: 16px; z-index: 2147483647;
+    position: fixed; left: 0; top: 0; z-index: 2147483647; transform-origin: 0 0;
     font: 600 16px system-ui, sans-serif; padding: 12px 18px; border: 0; border-radius: 24px;
     background: #ff7139; color: #fff; box-shadow: 0 2px 8px #0006;
   }`;
@@ -42,7 +43,18 @@ button.addEventListener("pointerup", () => {
   void browser.runtime.sendMessage({ type: "openSparkTab" } satisfies Message);
 });
 
+function place(): void {
+  if (!visualViewport) return;
+  const { right, bottom, size } = placeChip(visualViewport);
+  button.style.transform = `translate(${right}px, ${bottom}px) scale(${size}) translate(-100%, -100%)`;
+}
+
 document.addEventListener("selectionchange", () => {
-  if (hasSelection() && !host.isConnected) document.documentElement.append(host);
+  if (hasSelection() && !host.isConnected) {
+    place();
+    document.documentElement.append(host);
+  }
   if (!hasSelection() && host.isConnected) host.remove();
 });
+visualViewport?.addEventListener("resize", place);
+visualViewport?.addEventListener("scroll", place);
