@@ -6,6 +6,7 @@ import * as esbuild from "esbuild";
 
 const ENTRY_POINTS = {
   background: "src/background.ts",
+  chip: "src/chip/chip.ts",
   options: "src/options/options.ts",
   popup: "src/popup/popup.ts",
 };

@@ -55,3 +55,11 @@ Decisions made while implementing without the user around. Each lists the option
 **Delete confirmation.** Firefox popups can't show `confirm()`, so Delete turns into "Really delete?" for 3 seconds.
 
 **E2E coverage.** WebDriver can't open the toolbar popup, so the e2e tests drive `popup.html?tab=<id>`, the Android route. The desktop popup runs the same page. Only its self-close after Send & close is untested, and that's `window.close()`.
+
+## Entry points (#7)
+
+**Loading the chip only on Android.** Options: a manifest content script that sniffs the user agent (what the spike did); the background registers the content script with `scripting.registerContentScripts` only when `getPlatformInfo()` reports Android. Picked: registration, which #7 asked for (no user-agent check). Desktop pages never load the chip code. It's registered at install and at browser startup, since an update can drop registered scripts.
+
+**Testing the entry points.** The chip e2e test injects `chip.js` by hand, since Firefox in the sandbox is desktop. It then taps the button and checks that the Spark tab opens for the right page. The desktop "Spark this" menu item isn't covered: WebDriver can't open context menus, and `openPopup()` needs a real user action. It's three lines. Check it by hand with `npm run dev:desktop`.
+
+**Where the chip sits.** It's fixed bottom-right, 80 px up, as in the spike, which you said looked good. It could hide something the page puts in that corner. Moving it next to the selection is possible later but fiddly on mobile.

@@ -265,3 +265,18 @@ export async function setServerUrl(driver: WebDriver, url: string): Promise<stri
   await driver.switchTo().window((await driver.getAllWindowHandles())[0]!);
   return text;
 }
+
+/** Runs `files` in the page tab `tabId` the way a registered content script would. */
+export async function injectContentScript(driver: WebDriver, tabId: number, file: string): Promise<void> {
+  const handle = await driver.getWindowHandle();
+  await openExtensionPage(driver, "options.html");
+  const result: unknown = await driver.executeAsyncScript(
+    `const [tabId, file, done] = arguments;
+     browser.scripting.executeScript({ target: { tabId }, files: [file] }).then(() => done("ok"), (e) => done(String(e)));`,
+    tabId,
+    file,
+  );
+  await driver.close();
+  await driver.switchTo().window(handle);
+  if (result !== "ok") throw new Error(`injecting ${file}: ${String(result)}`);
+}

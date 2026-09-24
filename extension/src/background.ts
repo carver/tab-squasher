@@ -59,7 +59,17 @@ async function resultFor(attempt: Attempt | undefined): Promise<SendResult> {
   }
 }
 
-async function handle(message: Message): Promise<SendResult | undefined> {
+/** Opens the popup page as a tab for `pageTab`: the Android route (ADR 0003). */
+async function openSparkTab(pageTab: browser.tabs.Tab | undefined): Promise<void> {
+  if (pageTab?.id === undefined) return;
+  await browser.tabs.create({
+    url: browser.runtime.getURL(`popup.html?tab=${pageTab.id}`),
+    openerTabId: pageTab.id,
+    ...(pageTab.windowId === undefined ? {} : { windowId: pageTab.windowId }),
+  });
+}
+
+async function handle(message: Message, sender: browser.runtime.MessageSender): Promise<SendResult | undefined> {
   switch (message.type) {
     case "send":
       await store.enqueue(message.spark);
@@ -75,12 +85,42 @@ async function handle(message: Message): Promise<SendResult | undefined> {
       void flushOutbox();
       return undefined;
     case "openSparkTab":
+      await openSparkTab(sender.tab);
       return undefined;
   }
 }
 
-browser.runtime.onMessage.addListener((message: Message) => handle(message));
+browser.runtime.onMessage.addListener((message: Message, sender) => handle(message, sender));
 browser.alarms.onAlarm.addListener((alarm) => {
   if (alarm.name === RETRY_ALARM) void flushOutbox();
 });
 browser.runtime.onStartup.addListener(() => void flushOutbox());
+
+// Entry points (issue #7). Desktop gets a right-click item that opens the
+// popup; Android, which has no context menus, gets the selection chip.
+
+const CHIP_SCRIPT = "spark-chip";
+const MENU_ITEM = "spark-this";
+
+async function setUpEntryPoints(): Promise<void> {
+  const { os } = await browser.runtime.getPlatformInfo();
+  if (os === "android") {
+    const registered = await browser.scripting.getRegisteredContentScripts({ ids: [CHIP_SCRIPT] });
+    if (registered.length === 0) {
+      await browser.scripting.registerContentScripts([
+        { id: CHIP_SCRIPT, matches: ["<all_urls>"], js: ["chip.js"], runAt: "document_idle" },
+      ]);
+    }
+  } else {
+    await browser.menus.removeAll();
+    browser.menus.create({ id: MENU_ITEM, title: "Spark this", contexts: ["page", "selection", "link", "video"] });
+  }
+}
+
+// Both are idempotent, and an update can drop registered content scripts.
+browser.runtime.onInstalled.addListener(() => void setUpEntryPoints());
+browser.runtime.onStartup.addListener(() => void setUpEntryPoints());
+browser.menus?.onClicked.addListener((info) => {
+  // openPopup() must run inside the click handler, before any await.
+  if (info.menuItemId === MENU_ITEM) void browser.action.openPopup();
+});
