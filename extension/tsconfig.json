@@ -3,8 +3,14 @@
     "target": "ES2022",
     "module": "ESNext",
     "moduleResolution": "bundler",
-    "lib": ["ES2022", "DOM", "DOM.Iterable"],
-    "types": ["firefox-webext-browser"],
+    "lib": [
+      "ES2022",
+      "DOM",
+      "DOM.Iterable"
+    ],
+    "types": [
+      "firefox-webext-browser"
+    ],
     "strict": true,
     "noUncheckedIndexedAccess": true,
     "exactOptionalPropertyTypes": true,
@@ -14,5 +20,7 @@
     "skipLibCheck": true,
     "noEmit": true
   },
-  "include": ["src", "test", "*.mjs", "*.ts"]
+  "include": [
+    "src"
+  ]
 }
