@@ -6,3 +6,6 @@
 /extension/dist/
 /extension/artifacts/
 __pycache__/
+
+# Personal notes, kept out of the repo.
+/todo.md
