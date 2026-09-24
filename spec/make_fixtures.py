@@ -101,6 +101,11 @@ INVALID = {
     "whitespace_only_note.json": pretty(spark(note="  \n ", quote=None, selection=None)),
     "untrimmed_note.json": pretty(spark(note=" padded note ")),
     "untrimmed_quote.json": pretty(spark(quote="Debezium ")),
+    # Regex engines disagree on these two: in Python's re, $ also matches
+    # before a final newline and \d matches any Unicode digit. The schema
+    # means ECMA-262 semantics, where neither matches.
+    "note_ending_in_newline.json": pretty(spark(note="A note\n")),
+    "timestamp_with_non_ascii_digits.json": pretty(spark(captured_at="\u0662026-09-24T03:12:45.120Z")),
     "quote_without_selection.json": pretty(spark(selection=None)),
     "selection_without_quote.json": pretty(spark(quote=None)),
     "whitespace_only_selection.json": pretty(spark(selection="   ")),
