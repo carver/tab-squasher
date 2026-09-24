@@ -78,7 +78,7 @@ Decisions made while implementing without the user around. Each lists the option
 
 ## anki-cards (#9)
 
-**Validating Inbox lines.** Options: a third hand-written validator in Python; jsonschema against tab-squasher's `spec/spark.schema.json`. Picked: the schema, so there's one source of truth. Python's `re` doesn't follow ECMA-262 regex rules (`$` matches before a final newline, `\d` matches any Unicode digit), so the `pattern` keyword runs on `regress`, an ECMA engine. Two new invalid fixtures pin that down for every validator. Cost: anki-cards needs `jsonschema` and `regress`, which its `install_sandbox.py` now installs.
+**Validating Inbox lines.** Options: a third hand-written validator in Python; jsonschema against tab-squasher's `spec/spark.schema.json`. Picked: the schema, so there's one source of truth. Python's `re` doesn't follow ECMA-262 regex rules (`$` matches before a final newline, `\d` matches any Unicode digit), so the `pattern` keyword runs on `regress`, an ECMA engine. Two new invalid fixtures pin that down for every validator. Cost: anki-cards needs `jsonschema` and `regress`, which its `install.py` now installs.
 
 **Traceability.** Cards from a Spark carry `spark_id` in `cards.jsonl`. `import_cards.py` ignores fields it doesn't know.
 

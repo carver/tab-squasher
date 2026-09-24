@@ -15,7 +15,7 @@ Vocabulary is in [CONTEXT.md](CONTEXT.md). Decisions are in [docs/adr](docs/adr)
 
 ## Setup
 
-In the sandbox, `./install_sandbox.sh` enables the git hooks, installs npm packages, and downloads the Firefox and geckodriver the e2e tests use. sandbox-setup runs it after every recreate.
+In the sandbox, `./install.sh` enables the git hooks, installs npm packages, and downloads the Firefox and geckodriver the e2e tests use. sandbox-setup runs it after every recreate.
 
 On the host:
 

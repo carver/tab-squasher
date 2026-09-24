@@ -26,7 +26,7 @@ npm run dev:desktop  # web-ext run on the host
 npm run dev:android  # web-ext run on a phone over adb, from the host
 ```
 
-`../install_sandbox.sh` downloads the Firefox and geckodriver the e2e tests use into `~/.cache/tab-squasher`. `FIREFOX_BIN` and `GECKODRIVER` override those paths.
+`../install.sh` downloads the Firefox and geckodriver the e2e tests use into `~/.cache/tab-squasher`. `FIREFOX_BIN` and `GECKODRIVER` override those paths.
 
 The e2e tests open extension pages from Firefox's chrome context, because WebDriver refuses to navigate to `moz-extension://` URLs (Firefox 156). They drive the popup as a tab, since WebDriver can't click the toolbar button. The toolbar popup itself is covered by manual testing.
 

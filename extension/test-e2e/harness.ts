@@ -1,6 +1,6 @@
 // Real Firefox (headless, via geckodriver) with the built extension
 // installed, a real tab-squasher server on a temp Inbox, and a local site
-// to Spark from. Paths default to what install_sandbox.sh downloads.
+// to Spark from. Paths default to what install.sh downloads.
 
 import { type ChildProcess, execFileSync, spawn } from "node:child_process";
 import { mkdtempSync, readFileSync, readdirSync, rmSync } from "node:fs";
