@@ -38,4 +38,9 @@ After that, `npm run sign` on the host bumps the patch version, runs lint and th
 
 Updates are manual for now: sign, then install the new `.xpi` over the old one on each device.
 
-Installing the signed file on Firefox for Android isn't confirmed on a real phone yet. The wizard's Android stage has the expected steps; update this section with what actually works.
+To install on Firefox for Android (confirmed on a phone):
+
+1. Copy the `.xpi` to the phone. `tailscale file cp artifacts/<file>.xpi <phone>:` works over the tailnet. First pick a folder for received files in the phone's Tailscale app, or the transfer sits at 0%. Android won't grant access to Downloads itself, so pick a subfolder.
+2. In Firefox, go to Settings, About Firefox, and tap the Firefox logo 5 times to turn on the debug menu.
+3. Back in Settings, open "Install extension from file" and pick the `.xpi`.
+4. In Add-ons, tab-squasher, set the server address.

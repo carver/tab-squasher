@@ -239,9 +239,9 @@ pause "Press Enter once it survives a restart."
 
 # ── Stage 5: Android ──────────────────────────────────────────────────────
 stage "Install on Firefox for Android"
-warn "Not yet verified on a phone. If a step doesn't match what you see, note"
-warn "what worked instead, so extension/README.md can say it."
-step "Copy the .xpi to the phone, for example: adb push '${XPI:-<file>.xpi}' /sdcard/Download/"
+step "Copy the .xpi to the phone. Over Tailscale: tailscale file cp '${XPI:-<file>.xpi}' <phone>:"
+say "Taildrop sits at 0% until you pick a folder for received files in the"
+say "phone's Tailscale app. Android won't allow Downloads itself; use a subfolder."
 step "In Firefox: Settings, About Firefox, then tap the Firefox logo 5 times"
 step "to turn on the debug menu."
 step "Back in Settings, open 'Install extension from file' and pick the .xpi."
