@@ -16,6 +16,10 @@ if [ -n "${SANDBOX_VM_ID:-}" ] || [ -e /run/sandbox ]; then
   fail "run this on the host; the AMO keys stay out of the sandbox."
 fi
 command -v secret-tool >/dev/null || fail "secret-tool is missing (package libsecret-tools)."
+# The source zip AMO gets is built from git, which can't see untracked files.
+untracked=$(git -C .. ls-files --others --exclude-standard -- extension spec)
+[ -z "$untracked" ] || fail "commit or remove these untracked files first:
+$untracked"
 
 WEB_EXT_API_KEY=$(secret-tool lookup service tab-squasher-amo field jwt-issuer) \
   || fail "no AMO key in the secret store. Run ./scripts/amo-wizard.sh first."

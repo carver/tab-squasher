@@ -30,7 +30,7 @@ Decisions made while implementing without the user around. Each lists the option
 
 **Extension id.** It's permanent once AMO signs a build. Options: an email-style id like `tab-squasher@carver`; a random GUID. Picked: `tab-squasher@carver`, readable in about:debugging. Change it before the first `npm run sign` if you'd rather use a domain you own.
 
-**Plain http:// server addresses.** Options: allow any; allow none; allow only localhost. Picked: only localhost and 127.0.0.1, for local testing. Anything else has to be https://, as tailscale serve provides.
+**Plain http:// server addresses.** Options: allow any; allow none; allow only this machine. Picked: only this machine (`localhost`, `127.0.0.1`, `[::1]`), for local testing. Anything else has to be https://, as tailscale serve provides.
 
 **Saving an address when the server is down.** Options: refuse to save until /health answers; save any well-formed address and report health separately. Picked: save and report. The laptop may simply be asleep while you set up the phone.
 
@@ -97,3 +97,21 @@ Decisions made while implementing without the user around. Each lists the option
 **Updates.** Options: reinstall by hand; have the tab-squasher server host an `update_url` manifest so Firefox updates itself. Picked: by hand for now. An `update_url` would put a fixed tailnet address into the signed build.
 
 **Installing on Android.** The wizard's steps (the debug menu via 5 taps on the logo in About Firefox, then "Install extension from file") are from memory and unverified, and the wizard says so. Nothing here was run: signing needs your Mozilla account.
+
+## After the code review
+
+These came up in the review and were left as they are on purpose.
+
+**Which video.** #5 says "the first `<video>`'s `currentTime`". The popup takes the first video that has started (`currentTime > 0`). On YouTube the first `<video>` in the page isn't always the one playing, for example with an ad slot or preview player. Change it back if a page proves this wrong.
+
+**The retry alarm and refused Sparks.** The alarm runs only while some Spark is waiting to be retried. Refused Sparks stay in the Outbox until you edit or delete them, and retrying them on a timer would only get the same refusal.
+
+**Refused Sparks on plain Send, and the Android tab.** See "Popup and Outbox" above. Both are deliberate departures from the #5 and #7 text.
+
+**Wizard library text.** Both wizards contain the /wizard skill's library verbatim, em dashes and unused helpers (`write_env`, `set_secret`) included, because the skill says not to edit it. Fixing the text belongs in the skill's template.
+
+**The 64 KB limit in three places.** The Rust, TypeScript and Python validators each hold the number, since JSON Schema can't express a byte limit. The fixtures `exactly_max_size` and `one_byte_over_max_size` fail in any validator that gets it wrong.
+
+**Sparks as untyped JSON in the server.** The server passes a validated `serde_json::Value` rather than a typed struct. It never reads a field except `id`, and writing back exactly what was received is the point. A struct would add a second copy of the schema to keep in sync.
+
+**Module state in the popup's compose code.** `compose.ts` keeps its mode in module variables and reaches the DOM directly, so only e2e tests cover it. The logic it calls (`buildSpark`, `describeSendResult`) is unit-tested. It's worth splitting if the form grows.

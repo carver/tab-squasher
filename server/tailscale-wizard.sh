@@ -247,6 +247,11 @@ pause
 # ── Stage 5: your phone, and the extension ────────────────────────────────
 URL="https://${TS_NAME:-<this-laptop>.<tailnet>.ts.net}:8443"
 stage "Check from your phone and set up the extension"
+if curl -fsS --max-time 10 "$URL/health" >/dev/null 2>&1; then
+  printf '  %s✓ %s/health answers from this laptop%s\n' "$GREEN" "$URL" "$RESET"
+else
+  warn "$URL/health doesn't answer from this laptop yet. Check stages 2 and 4."
+fi
 step "On your phone, with Tailscale connected, open:  $URL/health"
 note "It should show {\"status\":\"ok\",...}. Try it on cellular too."
 step "In Firefox on each device: Add-ons, tab-squasher, Settings."
