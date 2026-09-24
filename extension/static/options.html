@@ -1,0 +1,13 @@
+<!doctype html>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>tab-squasher settings</title>
+<link rel="stylesheet" href="common.css">
+<form id="form">
+  <label for="server-url">Server address</label>
+  <p class="muted">The tailscale serve URL printed by the host install script.</p>
+  <input id="server-url" type="url" placeholder="https://laptop.example.ts.net:8443" autocomplete="off" required>
+  <p><button type="submit">Save and check</button></p>
+  <p id="status" role="status"></p>
+</form>
+<script src="options.js"></script>

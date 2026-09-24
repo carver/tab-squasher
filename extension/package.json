@@ -1,0 +1,24 @@
+{
+  "name": "tab-squasher-extension",
+  "private": true,
+  "version": "0.1.0",
+  "type": "module",
+  "scripts": {
+    "build": "node build.mjs",
+    "typecheck": "tsc --noEmit",
+    "lint": "npm run -s typecheck && eslint . && npm run -s build && web-ext lint --source-dir dist --warnings-as-errors",
+    "test": "vitest run",
+    "dev:desktop": "npm run -s build && ./scripts/web-ext-run.sh firefox-desktop",
+    "dev:android": "npm run -s build && ./scripts/web-ext-run.sh firefox-android"
+  },
+  "devDependencies": {
+    "@eslint/js": "^10.0.1",
+    "@types/firefox-webext-browser": "^143.0.0",
+    "esbuild": "^0.28.2",
+    "eslint": "^10.11.0",
+    "typescript": "^6.0.3",
+    "typescript-eslint": "^8.70.1",
+    "vitest": "^5.0.1",
+    "web-ext": "^10.7.0"
+  }
+}

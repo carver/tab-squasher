@@ -25,3 +25,11 @@ Decisions made while implementing without the user around. Each lists the option
 **A line cut short by a crash.** Options: truncate the file back to the last newline; leave the fragment and start the next line with a newline. Picked: leave it. Truncating would be the only non-append write to the Inbox, and ADR 0001 promises readers the server only appends. Readers skip lines that don't parse.
 
 **Panics.** Options: `panic = "abort"` for a smaller binary, with systemd restarting the service; the default unwinding. Picked: unwinding, so one bad request can't take the server down.
+
+## Extension skeleton (#4)
+
+**Extension id.** It's permanent once AMO signs a build. Options: an email-style id like `tab-squasher@carver`; a random GUID. Picked: `tab-squasher@carver`, readable in about:debugging. Change it before the first `npm run sign` if you'd rather use a domain you own.
+
+**Plain http:// server addresses.** Options: allow any; allow none; allow only localhost. Picked: only localhost and 127.0.0.1, for local testing. Anything else has to be https://, as tailscale serve provides.
+
+**Saving an address when the server is down.** Options: refuse to save until /health answers; save any well-formed address and report health separately. Picked: save and report. The laptop may simply be asleep while you set up the phone.
