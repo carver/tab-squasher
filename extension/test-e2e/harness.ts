@@ -111,6 +111,17 @@ export async function startSite(): Promise<{ url: string; close: () => Promise<v
        <p id="quote">Debezium records all row-level changes in your database.</p>
        <p>Other text on the page.</p>`,
     ],
+    // Rules real sites ship that catch a stray element: Reddit-style web
+    // component sites hide undefined custom elements until they load.
+    "/hostile": [
+      "text/html",
+      `<!doctype html><title>Hostile styles</title>
+       <style>
+         :not(:defined) { visibility: hidden !important; }
+         body ~ * { display: none !important; }
+       </style>
+       <p id="quote">Debezium records all row-level changes in your database.</p>`,
+    ],
     "/video": [
       "text/html",
       `<!doctype html><title>A talk on backpressure</title>

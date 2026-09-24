@@ -5,7 +5,10 @@
 
 import type { Message } from "../lib/messages";
 
+// Page CSS can still style the host element; hiding undefined custom
+// elements is common. Important rules from inside the shadow root win.
 const STYLE = `
+  :host { all: initial !important; }
   button {
     position: fixed; bottom: 80px; right: 16px; z-index: 2147483647;
     font: 600 16px system-ui, sans-serif; padding: 12px 18px; border: 0; border-radius: 24px;

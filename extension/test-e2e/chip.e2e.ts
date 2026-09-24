@@ -23,18 +23,28 @@ afterAll(async () => {
 });
 
 /** The chip is in a closed shadow root, so it's found by where it sits on screen. */
-async function tapChip(): Promise<void> {
+async function chipSpot(): Promise<{ x: number; y: number }> {
   const [width, height] = (await driver.executeScript("return [innerWidth, innerHeight]")) as [number, number];
+  return { x: width - 40, y: height - 100 };
+}
+
+async function tapChip(): Promise<void> {
   await driver
     .actions()
-    .move({ x: width - 40, y: height - 100 })
+    .move(await chipSpot())
     .press()
     .release()
     .perform();
 }
 
+/** Visible and tappable: hit testing skips hidden elements, and a closed shadow root reports its host. */
 async function chipShown(): Promise<boolean> {
-  return (await driver.executeScript("return document.querySelector('tab-squasher-chip') !== null")) as boolean;
+  const { x, y } = await chipSpot();
+  return (await driver.executeScript(
+    "return document.elementFromPoint(arguments[0], arguments[1])?.localName === 'tab-squasher-chip'",
+    x,
+    y,
+  )) as boolean;
 }
 
 describe("the selection chip", () => {
@@ -47,6 +57,14 @@ describe("the selection chip", () => {
     await driver.wait(chipShown, 2000);
     await driver.executeScript("getSelection().removeAllRanges()");
     await driver.wait(async () => !(await chipShown()), 2000);
+  });
+
+  it("shows despite page styles that hide stray elements", async () => {
+    const tabId = await openPage(driver, `${site.url}/hostile`);
+    await injectContentScript(driver, tabId, "chip.js");
+
+    await selectText(driver, "#quote");
+    await driver.wait(chipShown, 2000);
   });
 
   it("opens the Spark tab for the page, with the selection as the Quote", async () => {
