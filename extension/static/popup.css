@@ -1,0 +1,15 @@
+body { width: 380px; max-width: 100%; box-sizing: border-box; }
+@media (max-width: 500px) { body { width: auto; } }
+label { font-weight: 600; display: block; margin: 10px 0 4px; }
+.label-row { display: flex; justify-content: space-between; align-items: end; }
+.hint { margin: 4px 0 0; }
+.buttons { display: flex; gap: 8px; margin-top: 10px; }
+.buttons button { flex: 1; }
+button.small { padding: 4px 10px; font-size: 13px; }
+.notice { border: 1px solid var(--border); border-radius: 6px; padding: 8px; }
+#problem:empty, #status:empty { display: none; }
+#source { margin: 0 0 4px; overflow-wrap: anywhere; }
+h2 { font-size: 15px; margin: 18px 0 6px; }
+#outbox-list { list-style: none; padding: 0; margin: 0; }
+#outbox-list li { border-top: 1px solid var(--border); padding: 8px 0; }
+#outbox-list .actions { display: flex; gap: 6px; margin-top: 4px; }

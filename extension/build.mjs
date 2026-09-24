@@ -7,6 +7,7 @@ import * as esbuild from "esbuild";
 const ENTRY_POINTS = {
   background: "src/background.ts",
   options: "src/options/options.ts",
+  popup: "src/popup/popup.ts",
 };
 
 const pkg = JSON.parse(await readFile("package.json", "utf8"));

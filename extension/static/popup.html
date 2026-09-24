@@ -1,0 +1,35 @@
+<!doctype html>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Spark</title>
+<link rel="stylesheet" href="common.css">
+<link rel="stylesheet" href="popup.css">
+<main>
+  <p id="setup" class="notice" hidden>
+    No server address yet, so Sparks will wait in the Outbox.
+    <button id="open-settings" class="secondary small" type="button">Settings</button>
+  </p>
+  <form id="compose">
+    <p id="source" class="muted"></p>
+    <label for="note">Note</label>
+    <textarea id="note" rows="3" placeholder="What to remember, in your own words"></textarea>
+    <div class="label-row">
+      <label for="quote">Quote</label>
+      <button id="clear-quote" class="secondary small" type="button">Clear</button>
+    </div>
+    <textarea id="quote" rows="5" placeholder="Select text on the page to quote it"></textarea>
+    <p class="muted hint">Mark a Cut with ... and a Rewrite with [square brackets].</p>
+    <p id="problem" class="bad" role="alert"></p>
+    <div class="buttons">
+      <button id="send" type="submit">Send</button>
+      <button id="send-close" type="button">Send &amp; close</button>
+      <button id="cancel-edit" class="secondary" type="button" hidden>Cancel</button>
+    </div>
+    <p id="status" role="status"></p>
+  </form>
+  <section id="outbox" hidden>
+    <h2>Outbox</h2>
+    <ul id="outbox-list"></ul>
+  </section>
+</main>
+<script src="popup.js"></script>

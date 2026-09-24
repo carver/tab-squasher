@@ -9,7 +9,8 @@
     "lint": "npm run -s typecheck && eslint . && npm run -s build && web-ext lint --source-dir dist --warnings-as-errors",
     "test": "vitest run",
     "dev:desktop": "npm run -s build && ./scripts/web-ext-run.sh firefox-desktop",
-    "dev:android": "npm run -s build && ./scripts/web-ext-run.sh firefox-android"
+    "dev:android": "npm run -s build && ./scripts/web-ext-run.sh firefox-android",
+    "test:e2e": "vitest run --config vitest.e2e.config.ts"
   },
   "devDependencies": {
     "@eslint/js": "^10.0.1",

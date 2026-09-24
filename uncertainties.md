@@ -33,3 +33,25 @@ Decisions made while implementing without the user around. Each lists the option
 **Plain http:// server addresses.** Options: allow any; allow none; allow only localhost. Picked: only localhost and 127.0.0.1, for local testing. Anything else has to be https://, as tailscale serve provides.
 
 **Saving an address when the server is down.** Options: refuse to save until /health answers; save any well-formed address and report health separately. Picked: save and report. The laptop may simply be asleep while you set up the phone.
+
+## Popup and Outbox (#5, #6)
+
+**How Send reaches the server.** Options: the popup POSTs directly and queues only on failure; every Spark goes into the Outbox first and the background script sends from there. Picked: always through the Outbox. Send & close can then close everything right away, and nothing is lost if the popup dies mid-request.
+
+**A 4xx on plain Send.** Issue #5 said to show the error and keep the form. Since Sparks go through the Outbox, a refused Spark instead stays in the Outbox with the server's reason, and the form clears. You fix it with Edit, the same as for a Spark refused during a background retry. One path instead of two. It should be rare, because the popup already runs the same checks as the server.
+
+**Retrying refused Sparks.** Options: retry every Spark on each flush; skip refused ones until edited. Picked: skip. A 400 or 409 won't change on its own.
+
+**Order and failures.** Sparks send oldest first, one at a time, and a flush stops at the first network or server failure, since the rest would fail the same way.
+
+**An edit while the old version is being sent.** The edit wins: the result for the old version is dropped, and the edited version stays queued. If the server did get the old one, the edit comes back as a 409, "Already received, with different content", and you decide.
+
+**A video at 0:00.** Options: store 0; store null. Picked: null. A video that hasn't started isn't a moment worth linking to.
+
+**Quoting with nothing selected.** Options: allow a typed Quote with the Selection set to the same text; refuse. Picked: refuse ("Select text on the page to quote it"), and the Quote box is disabled with no selection. A Quote is by definition page text.
+
+**Popup opened as a tab (Android).** After a Send the server accepts, or a saved edit, the Spark tab closes and the page comes back to the front. If the Spark is only queued or was refused, the tab stays open so you can read why.
+
+**Delete confirmation.** Firefox popups can't show `confirm()`, so Delete turns into "Really delete?" for 3 seconds.
+
+**E2E coverage.** WebDriver can't open the toolbar popup, so the e2e tests drive `popup.html?tab=<id>`, the Android route. The desktop popup runs the same page. Only its self-close after Send & close is untested, and that's `window.close()`.
