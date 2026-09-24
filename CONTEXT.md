@@ -9,7 +9,7 @@ One thing a page inspired, recorded with its Source and sent to a Destination. A
 _Avoid_: Capture, Clipping, Takeaway, Learning
 
 **Selection**:
-The exact page text selected when the Spark was made. Never edited, kept so the Quote can be checked against it.
+The exact page text selected when the Spark was made. Never edited, and kept only alongside a Quote so the Quote can be checked against it.
 _Avoid_: Highlight
 
 **Quote**:
