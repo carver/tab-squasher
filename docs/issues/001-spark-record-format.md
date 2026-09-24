@@ -25,7 +25,7 @@ A Spark as the extension sends it:
 }
 ```
 
-In the Inbox, the server adds `"received_at"` (RFC 3339, UTC) and changes nothing else.
+In the Inbox, the server adds `"received_at"` (RFC 3339, UTC), the time the Spark entered the Inbox, and changes nothing else.
 
 ## Rules
 

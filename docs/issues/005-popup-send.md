@@ -11,6 +11,7 @@ The heart of the extension. The same page runs as the toolbar popup and as a tab
   - Source line: title, domain, and `m:ss` when there's a video time.
 - Buttons: **Send** and **Send & close**. Both are disabled until the Spark is valid (001 rules, including the 64 KB limit). The popup names the rule that isn't met, for example "Add a Note or a Quote" or "Quote is too long, trim it".
 - Send builds the Spark (new UUID, `captured_at` now, empty strings to `null`, Selection dropped if the Quote is empty) and hands it to the background script. The background POSTs it to the server. Any failure other than a 4xx goes to the Outbox (006). A 4xx means the Spark itself is bad, so the popup shows the error and keeps the form.
+- After a 201 or 200 the popup says "Sent". Nothing in the UI promises the Spark is final, because 010 will make it editable for a minute after sending. Leave room below the form for 010's "recently sent" list.
 - Send clears the form so another Spark from the same page is quick. Send & close also closes the page tab, then `window.close()`, and that works even if the Spark only reached the Outbox.
 
 ## Tests

@@ -4,8 +4,9 @@ Rust service in `server/`. See ADR 0001 for why it runs on the host and never wr
 
 ## What to build
 
-- `POST /sparks` takes one Spark (001), validates it, adds `received_at`, and appends it as one line to `data/inbox/<YYYY>.jsonl`. `YYYY` is the UTC year at receipt. The server creates the directory and file if needed. It never renames, moves or rewrites a file.
-- Idempotency by `id`. The same `id` with identical content returns 200 and writes nothing. The same `id` with different content returns 409. A new Spark returns 201. The server loads the set of ids from whatever Inbox files exist at startup, and a missing past year isn't an error.
+- `POST /sparks` takes one Spark (001), validates it, adds `received_at`, and appends it as one line to `data/inbox/<YYYY>.jsonl`. `received_at` is when the Spark enters the Inbox, and `YYYY` is its UTC year. Today that's the moment of receipt. Once 010 adds a Hold, it's the moment the Hold ends. The server creates the directory and file if needed. It never renames, moves or rewrites a file.
+- 201 means "accepted, the server owns it now", not "written to the Inbox". The body is `{"id": ..., "status": "inbox"}`. 010 will add `{"status": "held", "editable_until": ...}`, so clients must not assume `inbox`.
+- Idempotency by `id`. The same `id` with identical content returns 200 with the same body shape and writes nothing. The same `id` with different content returns 409. A new Spark returns 201. POST never edits. `PUT` and `DELETE /sparks/{id}` are reserved for 010. The server loads the set of ids from whatever Inbox files exist at startup, and a missing past year isn't an error. Keep the "known ids" check behind one function, since 010 adds held Sparks as a second source.
 - Errors: 400 with a short JSON reason for invalid Sparks, and 413 over 64 KB. The body limit is enforced before parsing.
 - `GET /health` returns 200 and the server version. The popup uses it to show whether it can reach the server.
 - Binds to `127.0.0.1` only (port configurable, default 3816). Tailscale serve provides the outside access (003).
