@@ -2,7 +2,7 @@
 
 use std::io;
 use std::path::PathBuf;
-use std::sync::{Arc, Mutex};
+use std::sync::{Arc, Mutex, PoisonError};
 
 use axum::Router;
 use axum::body::Bytes;
@@ -58,7 +58,13 @@ async fn post_spark(State(shared): State<Arc<Shared>>, body: Bytes) -> Response 
         Err(rejection) => return error(StatusCode::BAD_REQUEST, &rejection.0),
     };
     let id = spark["id"].clone();
-    let outcome = shared.inbox.lock().expect("inbox lock").add(spark, shared.clock.now());
+    // A panic while holding the lock can't leave the Inbox half-updated (add
+    // changes memory only after the write succeeds), so a poisoned lock is safe to reuse.
+    let outcome = shared
+        .inbox
+        .lock()
+        .unwrap_or_else(PoisonError::into_inner)
+        .add(spark, shared.clock.now());
     match outcome {
         Ok(Outcome::Added) => (StatusCode::CREATED, Json(json!({"id": id, "status": "inbox"}))).into_response(),
         Ok(Outcome::AlreadyHave) => (StatusCode::OK, Json(json!({"id": id, "status": "inbox"}))).into_response(),
@@ -68,10 +74,8 @@ async fn post_spark(State(shared): State<Arc<Shared>>, body: Bytes) -> Response 
         ),
         Err(e) => {
             eprintln!("tab-squasher: could not write to the Inbox: {e}");
-            error(
-                StatusCode::INTERNAL_SERVER_ERROR,
-                &format!("could not write to the Inbox: {e}"),
-            )
+            // The detail (paths, errno) goes to the journal, not to the client.
+            error(StatusCode::INTERNAL_SERVER_ERROR, "could not write to the Inbox")
         }
     }
 }

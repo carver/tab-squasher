@@ -49,7 +49,7 @@ impl Inbox {
     pub fn add(&mut self, spark: Value, received_at: DateTime<Utc>) -> io::Result<Outcome> {
         let id = spark["id"].as_str().expect("validated Spark has an id").to_owned();
         let print = fingerprint(&spark);
-        match self.known.get(&id) {
+        match self.fingerprint_of(&id) {
             Some(existing) if *existing == print => return Ok(Outcome::AlreadyHave),
             Some(_) => return Ok(Outcome::Conflict),
             None => {}
@@ -59,6 +59,14 @@ impl Inbox {
         append_line(&self.dir.join(format!("{}.jsonl", received_at.year())), &line)?;
         self.known.insert(id, print);
         Ok(Outcome::Added)
+    }
+}
+
+impl Inbox {
+    /// The one place that answers "is this id already here?". A Hold (issue #10)
+    /// will add held Sparks as a second source.
+    fn fingerprint_of(&self, id: &str) -> Option<&Fingerprint> {
+        self.known.get(id)
     }
 }
 
@@ -88,12 +96,13 @@ fn year_files(dir: &Path) -> io::Result<Vec<PathBuf>> {
     Ok(files)
 }
 
-/// Every complete, parseable line. A line cut short by a crash is skipped.
+/// Every parseable line. A line cut short by a crash is skipped, even when
+/// the cut split a multibyte character, so each line is decoded on its own.
 fn read_sparks(path: &Path) -> io::Result<Vec<Value>> {
-    let text = fs::read_to_string(path)?;
-    Ok(text
-        .lines()
-        .filter_map(|line| serde_json::from_str(line).ok())
+    let bytes = fs::read(path)?;
+    Ok(bytes
+        .split(|&b| b == b'\n')
+        .filter_map(|line| serde_json::from_slice(line).ok())
         .collect())
 }
 

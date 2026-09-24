@@ -220,3 +220,36 @@ async fn ordinary_web_pages_may_not_call_the_server_cross_origin() {
 
     assert!(response.headers().get("access-control-allow-origin").is_none());
 }
+
+#[tokio::test]
+async fn a_crash_that_cut_a_multibyte_character_does_not_stop_the_server_starting() {
+    let server = Server::at("2026-09-24T03:15:00Z");
+    server.post_spark(&fixture("non_ascii.json")).await;
+    let path = server.inbox_dir().join("2026.jsonl");
+    let mut bytes = std::fs::read(&path).unwrap();
+    let cut = bytes.iter().position(|&b| b >= 0x80).unwrap() + 1; // inside a UTF-8 sequence
+    let fragment = bytes[..cut].to_vec();
+    bytes.extend_from_slice(&fragment);
+    std::fs::write(&path, &bytes).unwrap();
+
+    let server = server.restart();
+
+    assert_eq!(server.post_spark(&fixture("non_ascii.json")).await.0, StatusCode::OK);
+    assert_eq!(
+        server.post_spark(&fixture("note_only.json")).await.0,
+        StatusCode::CONFLICT
+    );
+}
+
+#[tokio::test]
+async fn a_failed_write_is_a_server_error_that_does_not_reveal_local_paths() {
+    use std::os::unix::fs::PermissionsExt;
+    let server = Server::at("2026-09-24T03:15:00Z");
+    std::fs::set_permissions(server.inbox_dir(), std::fs::Permissions::from_mode(0o555)).unwrap();
+
+    let (status, body) = server.post_spark(&fixture("note_only.json")).await;
+
+    std::fs::set_permissions(server.inbox_dir(), std::fs::Permissions::from_mode(0o755)).unwrap();
+    assert_eq!(status, StatusCode::INTERNAL_SERVER_ERROR);
+    assert_eq!(body, json!({"error": "could not write to the Inbox"}));
+}
