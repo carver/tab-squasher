@@ -1,0 +1,79 @@
+# The same checks as .githooks/pre-commit, run on every part of the repo, plus
+# the extension e2e tests.
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  shell:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      - name: shellcheck
+        # SC2034: the wizard library defines colors that not every wizard uses.
+        run: git ls-files -z '*.sh' '.githooks/*' | xargs -0 shellcheck -e SC2034
+
+  spec:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-python@v6
+        with:
+          python-version: "3.x"
+      - run: pip install pyflakes
+      - run: python3 -m pyflakes spec/make_fixtures.py
+      - name: fixtures match make_fixtures.py
+        run: |
+          python3 spec/make_fixtures.py >/dev/null
+          git diff --exit-code -- spec/fixtures
+          test -z "$(git ls-files --others --exclude-standard spec/fixtures)"
+
+  server:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: server
+    steps:
+      - uses: actions/checkout@v5
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          components: rustfmt, clippy
+      - uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: server
+      - run: cargo fmt --check
+      - run: cargo clippy --all-targets -- -D warnings
+      - run: cargo test
+
+  extension:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: extension/package-lock.json
+      # The e2e tests build and run the server.
+      - uses: dtolnay/rust-toolchain@stable
+      - uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: server
+      - name: install.sh (npm packages, Firefox, geckodriver)
+        run: ./install.sh
+      - run: npm run lint
+        working-directory: extension
+      - run: npm test
+        working-directory: extension
+      - run: npm run test:e2e
+        working-directory: extension

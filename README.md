@@ -24,7 +24,7 @@ On the host:
 
 ## Development
 
-The pre-commit hook (`.githooks/pre-commit`) lints and runs the fast tests for whichever parts a commit touches.
+The pre-commit hook (`.githooks/pre-commit`) lints and runs the fast tests for whichever parts a commit touches. CI (`.github/workflows/ci.yml`) runs all of them, plus the e2e tests, on pushes to main and on pull requests.
 
 ```bash
 (cd server && cargo test)
