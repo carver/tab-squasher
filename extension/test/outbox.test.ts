@@ -85,7 +85,7 @@ describe("flush", () => {
     expect(results).toEqual(new Map<string, Attempt>([["a", REJECTED], ["b", FAILED]]));
   });
 
-  it("keeps a Spark enqueued while a flush is running", async () => {
+  it("keeps a Spark added while a flush is running", async () => {
     const store = await withSparks(spark("a"));
 
     await flush(store, async (s) => {

@@ -1,3 +1,4 @@
+import type { Tone } from "../lib/present";
 import { checkServer, parseServerUrl } from "../lib/server";
 import { loadServerUrl, saveServerUrl } from "../lib/settings";
 
@@ -5,7 +6,7 @@ const form = document.querySelector<HTMLFormElement>("#form")!;
 const input = document.querySelector<HTMLInputElement>("#server-url")!;
 const status = document.querySelector<HTMLElement>("#status")!;
 
-function show(message: string, tone: "good" | "bad" | "muted"): void {
+function show(message: string, tone: Tone): void {
   status.textContent = message;
   status.className = tone;
 }

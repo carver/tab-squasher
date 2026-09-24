@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 
-import { describeSendResult, formatVideoTime, summarizeEntry } from "../src/lib/present";
+import { describeSendResult, formatVideoTime, sentence, summarizeEntry } from "../src/lib/present";
+import { ALREADY_RECEIVED } from "../src/lib/send";
 import type { Spark } from "../src/lib/spark";
 
 describe("formatVideoTime", () => {
@@ -36,8 +37,18 @@ describe("summarizeEntry", () => {
     );
   });
 
+  it("suggests deleting a copy the Inbox already has in another version", () => {
+    expect(summarizeEntry({ spark: SPARK, problem: ALREADY_RECEIVED }, now).advice).toBe(
+      "The Inbox already has the first version. Delete this copy unless the change matters.",
+    );
+    expect(summarizeEntry({ spark: SPARK, problem: "A Spark needs a Note, a Quote, or both." }, now).advice).toBe(
+      "Edit it to fix, or delete it.",
+    );
+    expect(summarizeEntry({ spark: SPARK, problem: null }, now).advice).toBeNull();
+  });
+
   it("shows the domain without www, the age, and any problem", () => {
-    expect(summarizeEntry({ spark: SPARK, problem: "Already received, with different content" }, now)).toMatchObject({
+    expect(summarizeEntry({ spark: SPARK, problem: ALREADY_RECEIVED }, now)).toMatchObject({
       domain: "debezium.io",
       age: "2 h ago",
       problem: "Already received, with different content",
@@ -53,13 +64,21 @@ describe("summarizeEntry", () => {
   });
 });
 
+describe("sentence", () => {
+  it("ends text with a period unless it already ends a sentence", () => {
+    expect(sentence("No server address yet")).toBe("No server address yet.");
+    expect(sentence("Is this device on the tailnet?")).toBe("Is this device on the tailnet?");
+    expect(sentence("Done.")).toBe("Done.");
+  });
+});
+
 describe("describeSendResult", () => {
   it("says Sent without promising the Spark is final", () => {
     expect(describeSendResult({ outcome: "sent" })).toEqual({ message: "Sent", tone: "good" });
   });
 
   it("explains a Spark kept for retry", () => {
-    expect(describeSendResult({ outcome: "queued", problem: "Couldn't reach the server" })).toEqual({
+    expect(describeSendResult({ outcome: "waiting", problem: "Couldn't reach the server" })).toEqual({
       message: "Couldn't reach the server. Saved in the Outbox; it will retry.",
       tone: "muted",
     });

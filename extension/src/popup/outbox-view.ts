@@ -19,6 +19,7 @@ function row(entry: Entry, onEdit: (entry: Entry) => void): HTMLLIElement {
   const item = document.createElement("li");
   item.append(line(summary.text), line(`${summary.domain} · ${summary.age}`, "muted"));
   if (summary.problem) item.append(line(summary.problem, "bad"));
+  if (summary.advice) item.append(line(summary.advice, "muted"));
   const actions = document.createElement("div");
   actions.className = "actions";
   actions.append(button("Edit", () => onEdit(entry)), deleteButton(entry.spark.id));

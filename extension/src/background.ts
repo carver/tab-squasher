@@ -38,7 +38,8 @@ async function scheduleRetry(): Promise<void> {
   }
 }
 
-async function queueAndSend(spark: Spark, wait: boolean): Promise<SendResult> {
+/** Sends whatever the Outbox holds; with `wait`, reports what happened to `spark`. */
+async function sendFromOutbox(spark: Spark, wait: boolean): Promise<SendResult> {
   const flushed = flushOutbox();
   if (!wait) return { outcome: "saved" };
   return resultFor((await flushed).get(spark.id));
@@ -47,7 +48,7 @@ async function queueAndSend(spark: Spark, wait: boolean): Promise<SendResult> {
 async function resultFor(attempt: Attempt | undefined): Promise<SendResult> {
   if (!attempt) {
     const problem = (await loadServerUrl()) ? "Waiting behind older Sparks" : NO_SERVER;
-    return { outcome: "queued", problem };
+    return { outcome: "waiting", problem };
   }
   switch (attempt.kind) {
     case "accepted":
@@ -55,7 +56,7 @@ async function resultFor(attempt: Attempt | undefined): Promise<SendResult> {
     case "rejected":
       return { outcome: "rejected", problem: attempt.problem };
     case "failed":
-      return { outcome: "queued", problem: attempt.problem };
+      return { outcome: "waiting", problem: attempt.problem };
   }
 }
 
@@ -73,10 +74,10 @@ async function handle(message: Message, sender: browser.runtime.MessageSender): 
   switch (message.type) {
     case "send":
       await store.enqueue(message.spark);
-      return queueAndSend(message.spark, message.wait);
+      return sendFromOutbox(message.spark, message.wait);
     case "edit":
       await store.edit(message.spark);
-      return queueAndSend(message.spark, true);
+      return sendFromOutbox(message.spark, true);
     case "delete":
       await store.remove(message.id);
       await scheduleRetry();

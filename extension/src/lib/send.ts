@@ -10,7 +10,11 @@ export type Attempt =
   | { kind: "rejected"; problem: string }
   | { kind: "failed"; problem: string };
 
+export const ALREADY_RECEIVED = "Already received, with different content";
+
 const SEND_TIMEOUT_MS = 15_000;
+/** 4xx answers that mean "not now" rather than "not this Spark". */
+const TRY_AGAIN_LATER = new Set([408, 429]);
 
 export async function sendSpark(url: string, body: string, fetchFn: typeof fetch = fetch): Promise<Attempt> {
   let response: Response;
@@ -29,9 +33,9 @@ export async function sendSpark(url: string, body: string, fetchFn: typeof fetch
     return { kind: "accepted", status: field(answer, "status") ?? "unknown" };
   }
   if (response.status === 409) {
-    return { kind: "rejected", problem: "Already received, with different content" };
+    return { kind: "rejected", problem: ALREADY_RECEIVED };
   }
-  if (response.status >= 400 && response.status < 500) {
+  if (response.status >= 400 && response.status < 500 && !TRY_AGAIN_LATER.has(response.status)) {
     return { kind: "rejected", problem: field(answer, "error") ?? `The server refused it (${response.status})` };
   }
   return { kind: "failed", problem: `The server answered ${response.status}` };

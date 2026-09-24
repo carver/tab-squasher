@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { sendSpark } from "../src/lib/send";
+import { ALREADY_RECEIVED, sendSpark } from "../src/lib/send";
 
 const URL = "https://laptop.ts.net:8443";
 const BODY = '{"id":"x"}';
@@ -44,7 +44,14 @@ describe("sendSpark", () => {
   it("explains a conflict as a different Spark already received", async () => {
     expect(await sendSpark(URL, BODY, answer(409, { error: "..." }))).toEqual({
       kind: "rejected",
-      problem: "Already received, with different content",
+      problem: ALREADY_RECEIVED,
+    });
+  });
+
+  it.each([408, 429])("treats %i (try again later) as worth retrying", async (status) => {
+    expect(await sendSpark(URL, BODY, answer(status, {}))).toEqual({
+      kind: "failed",
+      problem: `The server answered ${status}`,
     });
   });
 

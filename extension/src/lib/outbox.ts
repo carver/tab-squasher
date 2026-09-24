@@ -16,7 +16,7 @@ export type Outbox = readonly Entry[];
 export interface OutboxStore {
   load(): Promise<Outbox>;
   enqueue(spark: Spark): Promise<void>;
-  /** Replaces a queued Spark with an edited version (same id) and clears its problem. */
+  /** Replaces a Spark in the Outbox with an edited version (same id) and clears its problem. */
   edit(spark: Spark): Promise<void>;
   remove(id: string): Promise<void>;
   /** Applies `change` to the latest state; changes run one at a time, in call order. */
@@ -95,7 +95,7 @@ function remove(outbox: Outbox, id: string): Outbox {
 /**
  * Records the result of sending `sent`. If the entry was edited while the
  * send was in flight, the result is about stale content and is dropped: the
- * edited version stays queued, and the server will answer it on its own.
+ * edited version stays in the Outbox, and the server will answer it on its own.
  */
 function afterAttempt(outbox: Outbox, sent: Spark, attempt: Attempt): Outbox {
   const current = outbox.find((entry) => entry.spark.id === sent.id);

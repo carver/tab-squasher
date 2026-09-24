@@ -2,6 +2,7 @@
 
 import type { SendResult } from "./messages";
 import type { Entry } from "./outbox";
+import { ALREADY_RECEIVED } from "./send";
 
 const SUMMARY_CHARS = 50;
 
@@ -12,6 +13,8 @@ export interface EntrySummary {
   domain: string;
   age: string;
   problem: string | null;
+  /** What to do about the problem, if there is one. */
+  advice: string | null;
 }
 
 /** 754.38 -> "12:34", 3725 -> "1:02:05". */
@@ -35,7 +38,21 @@ export function summarizeEntry(entry: Entry, now: Date): EntrySummary {
     domain: domainOf(spark.source.url),
     age: ageOf(new Date(spark.captured_at), now),
     problem: entry.problem,
+    advice: adviceFor(entry.problem),
   };
+}
+
+function adviceFor(problem: string | null): string | null {
+  if (problem === null) return null;
+  if (problem === ALREADY_RECEIVED) {
+    return "The Inbox already has the first version. Delete this copy unless the change matters.";
+  }
+  return "Edit it to fix, or delete it.";
+}
+
+/** Ends `text` with a period, unless it already ends like a sentence. */
+export function sentence(text: string): string {
+  return /[.?!]$/.test(text) ? text : `${text}.`;
 }
 
 export function describeSendResult(result: SendResult): { message: string; tone: Tone } {
@@ -44,11 +61,11 @@ export function describeSendResult(result: SendResult): { message: string; tone:
       return { message: "Sent", tone: "good" };
     case "saved":
       return { message: "Saved in the Outbox", tone: "muted" };
-    case "queued":
-      return { message: `${result.problem}. Saved in the Outbox; it will retry.`, tone: "muted" };
+    case "waiting":
+      return { message: `${sentence(result.problem)} Saved in the Outbox; it will retry.`, tone: "muted" };
     case "rejected":
       return {
-        message: `The server refused it: ${result.problem}. Fix or delete it in the Outbox below.`,
+        message: `The server refused it: ${sentence(result.problem)} Fix or delete it in the Outbox below.`,
         tone: "bad",
       };
   }

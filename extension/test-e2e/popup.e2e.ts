@@ -67,6 +67,22 @@ describe("settings", () => {
   });
 });
 
+describe("the server notice", () => {
+  it("stays hidden while the server answers", async () => {
+    await openPopup(driver, await openPage(driver, `${site.url}/article`));
+    await driver.sleep(500);
+    expect(await driver.findElement(By.css("#server-notice")).isDisplayed()).toBe(false);
+  });
+
+  it("says Sparks will wait when the server can't be reached", async () => {
+    await server.down();
+    await openPopup(driver, await openPage(driver, `${site.url}/article`));
+    const notice = await driver.findElement(By.css("#server-notice"));
+    await driver.wait(() => notice.isDisplayed(), 10_000);
+    expect(await notice.getText()).toContain("Couldn't reach the server. Is this device on the tailnet? Sparks will wait in the Outbox.");
+  });
+});
+
 describe("sending a Spark", () => {
   it("prefills the Quote from the page selection and sends the Spark to the Inbox", async () => {
     const tabId = await openPage(driver, `${site.url}/article`);
@@ -148,6 +164,27 @@ describe("the Outbox", () => {
     await driver.wait(() => server.inbox().length === before + 1, 10_000);
     expect(server.inbox().at(-1)).toMatchObject({ note: "Sent while offline" });
     await driver.wait(async () => (await outboxRows("Sent while offline")).length === 0, 5000);
+  });
+
+  it("keeps a Spark from Send & close while the server is down, and sends it later", async () => {
+    const before = server.inbox().length;
+    await server.down();
+    const tabsBefore = await openTabIds();
+    const tabId = await openPage(driver, `${site.url}/article`);
+    await openPopup(driver, tabId);
+    await driver.findElement(By.css("#note")).sendKeys("Closed while offline");
+
+    await driver.findElement(By.css("#send-close")).click();
+
+    await driver.wait(async () => (await openTabIds()) === tabsBefore, 10_000);
+    await driver.switchTo().window((await driver.getAllWindowHandles())[0]!);
+    await openPopup(driver, await openPage(driver, `${site.url}/article`));
+    await driver.wait(async () => (await outboxRows("Closed while offline")).length === 1, 5000);
+
+    await server.up();
+    await driver.navigate().refresh();
+    await driver.wait(() => server.inbox().length === before + 1, 10_000);
+    expect(server.inbox().at(-1)).toMatchObject({ note: "Closed while offline" });
   });
 
   it("lets a waiting Spark be edited before it is sent", async () => {

@@ -13,11 +13,11 @@ export type Message =
 /**
  * sent:     the server accepted it.
  * saved:    it's in the Outbox; the caller didn't wait to find out more.
- * queued:   it's in the Outbox because the server couldn't take it now.
+ * waiting:  it's in the Outbox because the server couldn't take it now.
  * rejected: it's in the Outbox, marked with the server's reason.
  */
 export type SendResult =
   | { outcome: "sent" }
   | { outcome: "saved" }
-  | { outcome: "queued"; problem: string }
+  | { outcome: "waiting"; problem: string }
   | { outcome: "rejected"; problem: string };

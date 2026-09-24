@@ -4,37 +4,49 @@
 import type { Message } from "../lib/messages";
 import { onOutboxChange, readOutbox } from "../lib/outbox-storage";
 import { readPage } from "../lib/page";
+import { sentence } from "../lib/present";
+import { checkServer } from "../lib/server";
 import { loadServerUrl } from "../lib/settings";
 import { startCompose, startEdit } from "./compose";
 import { renderOutbox } from "./outbox-view";
 
-async function pageTab(): Promise<{ tab: browser.tabs.Tab; openedAsTab: boolean }> {
-  const tabParam = new URLSearchParams(location.search).get("tab");
-  if (tabParam !== null) return { tab: await browser.tabs.get(Number(tabParam)), openedAsTab: true };
+/** Set when the Android chip opened this page as a tab for the page tab with this id. */
+const tabParam = new URLSearchParams(location.search).get("tab");
+
+async function pageTab(): Promise<browser.tabs.Tab> {
+  if (tabParam !== null) return browser.tabs.get(Number(tabParam));
   const [tab] = await browser.tabs.query({ active: true, currentWindow: true });
   if (!tab) throw new Error("no active tab");
-  return { tab, openedAsTab: false };
+  return tab;
 }
 
 async function closeSelf(): Promise<void> {
-  if (new URLSearchParams(location.search).has("tab")) {
+  if (tabParam !== null) {
     const self = await browser.tabs.getCurrent();
     if (self?.id !== undefined) await browser.tabs.remove(self.id);
   }
   window.close();
 }
 
-async function main(): Promise<void> {
-  const { tab, openedAsTab } = await pageTab();
-  const tabId = tab.id!;
-
-  const setup = document.querySelector<HTMLElement>("#setup")!;
-  setup.hidden = (await loadServerUrl()) !== null;
+/** Says, without blocking the form, when Sparks will have to wait in the Outbox. */
+async function showServerNotice(): Promise<void> {
+  const notice = document.querySelector<HTMLElement>("#server-notice")!;
+  const text = document.querySelector<HTMLElement>("#server-notice-text")!;
   document.querySelector("#open-settings")!.addEventListener("click", () => void browser.runtime.openOptionsPage());
+  const url = await loadServerUrl();
+  const problem = url === null ? "No server address yet" : await checkServer(url).then((h) => (h.ok ? null : h.problem));
+  notice.hidden = problem === null;
+  if (problem) text.textContent = `${sentence(problem)} Sparks will wait in the Outbox.`;
+}
+
+async function main(): Promise<void> {
+  const tab = await pageTab();
+  const tabId = tab.id!;
+  void showServerNotice();
 
   startCompose(await readPage(tabId), {
     afterSend: async (result) => {
-      if (openedAsTab && result.outcome === "sent") {
+      if (tabParam !== null && result.outcome === "sent") {
         await browser.tabs.update(tabId, { active: true });
         await closeSelf();
       }
