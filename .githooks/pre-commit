@@ -7,8 +7,25 @@ cd "$(git rev-parse --show-toplevel)"
 staged=$(git diff --cached --name-only --diff-filter=ACMRD)
 touches() { grep -q "^$1" <<<"$staged"; }
 
+# Check what is being committed, not the working tree: set unstaged edits to
+# tracked files aside until the hook finishes. Only stash when there is
+# something to stash, or the pop would take an older, unrelated stash.
+if ! git diff --quiet; then
+  git stash push --keep-index --quiet --message "pre-commit: unstaged changes"
+  trap 'git stash pop --quiet' EXIT
+fi
+
+staged_shell=$(git diff --cached --name-only --diff-filter=ACMR -- '*.sh' '.githooks/*')
+if [ -n "$staged_shell" ]; then
+  echo "pre-commit: shellcheck"
+  # SC2034: the wizard library defines colors that not every wizard uses.
+  # shellcheck disable=SC2086  # one path per word is intended
+  shellcheck -e SC2034 $staged_shell
+fi
+
 if touches spec/; then
   echo "pre-commit: spec fixtures up to date?"
+  python3 -m pyflakes spec/make_fixtures.py
   python3 spec/make_fixtures.py >/dev/null
   git diff --quiet -- spec/fixtures || {
     echo "spec/fixtures differs from make_fixtures.py output; review and stage it" >&2
