@@ -37,14 +37,20 @@ On the host, the first time: `./scripts/amo-wizard.sh`. It gets AMO API credenti
 
 After that, `npm run sign` on the host bumps the patch version, runs lint and the unit tests, and signs on AMO's unlisted channel. It uploads the source alongside the build, since the bundle is generated from TypeScript. The signed `.xpi` lands in `artifacts/` (gitignored). Commit the version bump afterwards. `./scripts/sign.sh --no-bump` retries a failed attempt without using up a version number.
 
-Updates are manual for now: sign, then install the new `.xpi` over the old one on each device.
+To install on desktop Firefox:
 
-To install on Firefox for Android (confirmed on a phone):
+1. Open `about:addons`, click the gear icon, then "Install Add-on From File...".
+2. Pick the `.xpi` from `artifacts/` and approve the permissions.
+3. In the add-on's settings, set the server address (the one `server/install-host.sh` prints).
+
+To install on Firefox for Android:
 
 1. Copy the `.xpi` to the phone. `tailscale file cp artifacts/<file>.xpi <phone>:` works over the tailnet. First pick a folder for received files in the phone's Tailscale app, or the transfer sits at 0%. Android won't grant access to Downloads itself, so pick a subfolder.
 2. In Firefox, go to Settings, About Firefox, and tap the Firefox logo 5 times to turn on the debug menu.
 3. Back in Settings, open "Install extension from file" and pick the `.xpi`.
 4. In Add-ons, tab-squasher, set the server address.
+
+Both installs have been checked by hand: the add-on survives a browser restart and sends Sparks to the Inbox. Updates are manual for now: sign, then install the new `.xpi` over the old one on each device.
 
 ## Debugging on Android
 
