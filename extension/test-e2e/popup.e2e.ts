@@ -3,6 +3,7 @@ import { afterAll, beforeAll, beforeEach, describe, expect, it } from "vitest";
 
 import {
   openPage,
+  removeTempDirs,
   openPopup,
   selectText,
   setServerUrl,
@@ -25,6 +26,7 @@ afterAll(async () => {
   await driver?.quit();
   await server?.down();
   await site?.close();
+  removeTempDirs();
 });
 
 beforeEach(async () => {

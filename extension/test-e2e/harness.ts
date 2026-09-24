@@ -3,7 +3,7 @@
 // to Spark from. Paths default to what install_sandbox.sh downloads.
 
 import { type ChildProcess, execFileSync, spawn } from "node:child_process";
-import { mkdtempSync, readFileSync, readdirSync } from "node:fs";
+import { mkdtempSync, readFileSync, readdirSync, rmSync } from "node:fs";
 import { createServer, type Server } from "node:http";
 import type { AddressInfo } from "node:net";
 import { homedir, tmpdir } from "node:os";
@@ -22,6 +22,19 @@ const EXTENSION_ID = "tab-squasher@carver";
 const EXTENSION_UUID = "6f1c7e0a-2b1d-4c1e-9a3e-5d2f8b7c4e10";
 export const EXTENSION_ORIGIN = `moz-extension://${EXTENSION_UUID}`;
 
+const tempDirs: string[] = [];
+
+function tempDir(prefix: string): string {
+  const dir = mkdtempSync(join(tmpdir(), prefix));
+  tempDirs.push(dir);
+  return dir;
+}
+
+/** Deletes every temp dir the harness made. Call from afterAll. */
+export function removeTempDirs(): void {
+  for (const dir of tempDirs.splice(0)) rmSync(dir, { recursive: true, force: true });
+}
+
 async function freePort(): Promise<number> {
   const probe = createServer();
   await new Promise<void>((resolve) => probe.listen(0, "127.0.0.1", resolve));
@@ -33,7 +46,7 @@ async function freePort(): Promise<number> {
 /** The tab-squasher server binary, restartable on the same port and Inbox. */
 export class SparkServer {
   private process: ChildProcess | null = null;
-  readonly inboxDir = join(mkdtempSync(join(tmpdir(), "tab-squasher-e2e-")), "inbox");
+  readonly inboxDir = join(tempDir("tab-squasher-e2e-"), "inbox");
 
   private constructor(readonly port: number) {}
 
@@ -145,7 +158,7 @@ function silentWav(seconds: number): Buffer {
 
 export async function startFirefox(): Promise<WebDriver> {
   execFileSync("npm", ["run", "-s", "build"], { cwd: EXTENSION_DIR, stdio: "inherit" });
-  const artifacts = mkdtempSync(join(tmpdir(), "tab-squasher-xpi-"));
+  const artifacts = tempDir("tab-squasher-xpi-");
   execFileSync("npx", ["web-ext", "build", "--source-dir", "dist", "--artifacts-dir", artifacts, "--filename", "e2e.zip"], {
     cwd: EXTENSION_DIR,
     stdio: "ignore",

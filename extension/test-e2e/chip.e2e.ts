@@ -4,7 +4,7 @@
 import { By, type WebDriver } from "selenium-webdriver";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 
-import { injectContentScript, openPage, selectText, setServerUrl, SparkServer, startFirefox, startSite } from "./harness";
+import { injectContentScript, openPage, removeTempDirs, selectText, setServerUrl, SparkServer, startFirefox, startSite } from "./harness";
 
 let driver: WebDriver;
 let server: SparkServer;
@@ -19,6 +19,7 @@ afterAll(async () => {
   await driver?.quit();
   await server?.down();
   await site?.close();
+  removeTempDirs();
 });
 
 /** The chip is in a closed shadow root, so it's found by where it sits on screen. */
