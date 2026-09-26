@@ -38,6 +38,17 @@ jobs:
           git diff --exit-code -- spec/fixtures
           test -z "$(git ls-files --others --exclude-standard spec/fixtures)"
 
+  reader:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-python@v6
+        with:
+          python-version: "3.x"
+      - run: pip install -r reader/requirements.txt
+      - run: python3 -m pyflakes reader/*.py
+      - run: python3 -m pytest -q reader
+
   server:
     runs-on: ubuntu-latest
     defaults:

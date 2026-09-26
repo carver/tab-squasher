@@ -1,0 +1,7 @@
+# inbox.py, for Destinations that read the Inbox
+jsonschema
+regress
+# Tests and lint for spec/
+hypothesis
+pyflakes
+pytest

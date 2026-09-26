@@ -6,6 +6,8 @@
 /extension/dist/
 /extension/artifacts/
 __pycache__/
+.pytest_cache/
+.hypothesis/
 
 # Personal notes, kept out of the repo.
 /todo.md

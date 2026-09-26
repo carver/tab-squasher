@@ -43,6 +43,12 @@ if touches spec/; then
   fi
 fi
 
+if touches reader/ || touches spec/; then
+  echo "pre-commit: reader"
+  python3 -m pyflakes reader/*.py
+  python3 -m pytest -q -p no:cacheprovider reader
+fi
+
 if touches server/ || touches spec/; then
   echo "pre-commit: server"
   export CARGO_TARGET_DIR="$repo/server/target"

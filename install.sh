@@ -18,6 +18,12 @@ if [ ! -d extension/node_modules ] || [ extension/package-lock.json -nt extensio
   (cd extension && npm ci --silent && touch node_modules)
 fi
 
+if ! python3 -c "import jsonschema, regress, hypothesis, pyflakes, pytest" 2>/dev/null; then
+  say "installing Python packages for reader/"
+  # The sandbox's system Python is "externally managed" (PEP 668).
+  python3 -m pip install -q --user --break-system-packages -r reader/requirements.txt
+fi
+
 mkdir -p "$CACHE"
 if [ ! -x "$CACHE/firefox/firefox" ] || [ "${1:-}" = "--update" ]; then
   say "downloading the latest Firefox for e2e tests"

@@ -1,10 +1,11 @@
 # Spark record format
 
-The one place the rules for a Spark are written down. The extension builds Sparks, the server checks them before they enter the Inbox, and anki-cards reads them back out. Each one tests against the fixtures here, so they can't drift apart without a test failing. Vocabulary is in [CONTEXT.md](../CONTEXT.md).
+The one place the rules for a Spark are written down. The extension builds Sparks, the server checks them before they enter the Inbox, and each Destination (anki-cards, knowledge-dump) reads its own back out. Each one tests against the fixtures here, so they can't drift apart without a test failing. Vocabulary is in [CONTEXT.md](../CONTEXT.md).
 
-- `spark.schema.json` is the machine-readable form. The server validates every request against it at runtime.
+- `spark.schema.json` is the machine-readable form. The server validates every request against it at runtime. It compiles the file in, so a change here needs a server rebuild and redeploy.
 - `fixtures/valid/` and `fixtures/invalid/` hold exact request bodies. Every validator accepts all of `valid/` and rejects all of `invalid/`.
 - `make_fixtures.py` generates the fixtures. Edit a case there, rerun it and commit both.
+- Destinations written in Python read the Inbox with [reader/inbox.py](../reader/README.md), which checks each line against this schema.
 
 ## A Spark
 
