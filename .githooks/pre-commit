@@ -14,6 +14,12 @@ staged_shell=$(git diff --cached --name-only --diff-filter=ACMR -- '*.sh' '.gith
 # edits made meanwhile (an editor, a script on the host) are safe. The path
 # is fixed so cargo reuses its build cache.
 git_dir=$(git rev-parse --absolute-git-dir)
+# git commit sets GIT_INDEX_FILE relative to the top level (.git/index).
+# Inside the copy that path names nothing, and git would see an empty index.
+if [ -n "${GIT_INDEX_FILE:-}" ]; then
+  GIT_INDEX_FILE=$(realpath "$GIT_INDEX_FILE")
+  export GIT_INDEX_FILE
+fi
 copy="$git_dir/pre-commit-tree"
 rm -rf "$copy"
 git checkout-index --all --prefix="$copy/"
