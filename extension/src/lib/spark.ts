@@ -3,6 +3,9 @@
 
 export const MAX_SPARK_BYTES = 65_536;
 
+export const DESTINATIONS = ["anki", "knowledge-dump"] as const;
+export type Destination = (typeof DESTINATIONS)[number];
+
 export interface Source {
   url: string;
   title: string | null;
@@ -12,7 +15,7 @@ export interface Source {
 export interface Spark {
   v: 1;
   id: string;
-  destination: "anki";
+  destination: Destination;
   note: string | null;
   quote: string | null;
   selection: string | null;
@@ -53,7 +56,7 @@ function problemWith(value: unknown): string | null {
   if (keysProblem) return keysProblem;
   if (value.v !== 1) return "Unsupported format version";
   if (typeof value.id !== "string" || !UUID_V4.test(value.id)) return "id must be a lowercase UUID v4";
-  if (value.destination !== "anki") return "Unknown destination";
+  if (!isDestination(value.destination)) return "Unknown destination";
   for (const field of ["note", "quote"] as const) {
     if (!isTrimmedTextOrNull(value[field])) return `${field} must be trimmed text or null`;
   }
@@ -89,6 +92,10 @@ function exactKeys(object: Record<string, unknown>, expected: string[], what: st
   const unknown = Object.keys(object).filter((key) => !expected.includes(key));
   if (unknown.length) return `${what} has unknown field ${unknown.join(", ")}`;
   return null;
+}
+
+export function isDestination(value: unknown): value is Destination {
+  return DESTINATIONS.some((destination) => destination === value);
 }
 
 function isTrimmedTextOrNull(value: unknown): boolean {

@@ -32,7 +32,7 @@ In the Inbox, the server adds `received_at`, the time the Spark entered the Inbo
 - Every field is present. Absent text is `null`, never omitted and never `""`.
 - `v` is the number 1. Unknown fields, including inside `source`, are rejected. Adding a field means bumping `v`.
 - `id` is a lowercase UUID v4 made by the extension. Retrying from the Outbox reuses it, which is what makes retries safe.
-- `destination` is `"anki"`, the only one so far.
+- `destination` is `"anki"` or `"knowledge-dump"`, spelled exactly so. A new Destination is a new value here, not a new field, so `v` stays 1. A server that predates a value rejects Sparks for it, so deploy the server before an extension that can send them. If one gets rejected anyway, it stays in the Outbox with the server's reason, and saving it from Edit sends it again.
 - `note` and `quote` are `null` or trimmed text: no leading or trailing whitespace, and not empty. At least one of them is text.
 - `selection` is text exactly when `quote` is. It's the raw page selection, so it isn't trimmed, but it can't be only whitespace. Clearing the Quote drops the Selection.
 - `source.url` starts with `http://` or `https://`. `source.title` is `null` or trimmed text.

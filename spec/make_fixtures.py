@@ -93,6 +93,7 @@ VALID = {
     "http_url.json": pretty(spark(source__url="http://example.com/page")),
     "timestamp_without_fraction.json": pretty(spark(captured_at="2026-09-24T03:12:45Z")),
     "exactly_max_size.json": sized(MAX_BYTES),
+    "knowledge_dump_destination.json": pretty(spark(destination="knowledge-dump")),
 }
 
 INVALID = {
@@ -116,6 +117,7 @@ INVALID = {
     "version_2.json": pretty(spark(v=2)),
     "version_as_string.json": pretty(spark(v="1")),
     "other_destination.json": pretty(spark(destination="notes")),
+    "destination_with_wrong_case.json": pretty(spark(destination="Anki")),
     "uppercase_id.json": pretty(spark(id=BASE["id"].upper())),
     "non_v4_id.json": pretty(spark(id="3f0c1d9e-6a57-1e57-9d64-2b1b4f0f6c11")),
     "ftp_url.json": pretty(spark(source__url="ftp://example.com/file")),

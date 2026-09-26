@@ -33,7 +33,7 @@ The page a Spark came from: its URL and title, plus the playback moment when the
 _Avoid_: Link, Origin
 
 **Destination**:
-Where a Spark gets acted on, e.g. Anki. Each Spark has exactly one.
+Where a Spark gets acted on: Anki (`anki`) or the knowledge dump (`knowledge-dump`), the user's personal knowledge base. Each Spark has exactly one, picked in the popup.
 _Avoid_: Target, Sink
 
 **Inbox**:

@@ -24,6 +24,26 @@ async fn a_new_spark_is_accepted_and_appended_to_the_inbox() {
 }
 
 #[tokio::test]
+async fn a_spark_for_the_knowledge_dump_is_kept_with_its_destination() {
+    let server = Server::at("2026-09-24T03:15:00Z");
+
+    let (status, _) = server.post_spark(&fixture("knowledge_dump_destination.json")).await;
+
+    assert_eq!(status, StatusCode::CREATED);
+    assert_eq!(server.inbox_lines("2026")[0]["destination"], json!("knowledge-dump"));
+}
+
+#[tokio::test]
+async fn a_spark_for_an_unknown_destination_is_rejected() {
+    let server = Server::at("2026-09-24T03:15:00Z");
+
+    let (status, _) = server.post_spark(&fixture("invalid/other_destination.json")).await;
+
+    assert_eq!(status, StatusCode::BAD_REQUEST);
+    assert!(server.inbox_lines("2026").is_empty());
+}
+
+#[tokio::test]
 async fn sending_the_same_spark_again_is_ok_and_writes_nothing() {
     let server = Server::at("2026-09-24T03:15:00Z");
     let spark = fixture("note_and_quote.json");
