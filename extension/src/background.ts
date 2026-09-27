@@ -60,14 +60,13 @@ async function resultFor(attempt: Attempt | undefined): Promise<SendResult> {
   }
 }
 
-/** Opens the popup page as a tab for `pageTab`: the Android route (ADR 0003). */
+/**
+ * Opens the popup page as a tab for `pageTab`: the Android route (ADR 0003).
+ * Firefox for Android rejects the whole call if it has `openerTabId`.
+ */
 async function openSparkTab(pageTab: browser.tabs.Tab | undefined): Promise<void> {
   if (pageTab?.id === undefined) return;
-  await browser.tabs.create({
-    url: browser.runtime.getURL(`popup.html?tab=${pageTab.id}`),
-    openerTabId: pageTab.id,
-    ...(pageTab.windowId === undefined ? {} : { windowId: pageTab.windowId }),
-  });
+  await browser.tabs.create({ url: browser.runtime.getURL(`popup.html?tab=${pageTab.id}`) });
 }
 
 async function handle(message: Message, sender: browser.runtime.MessageSender): Promise<SendResult | undefined> {
