@@ -1,9 +1,10 @@
 // Turning what's in the popup into a Spark.
 
-import { type Spark, validateSparkBody } from "./spark";
+import { type Destination, type Spark, validateSparkBody } from "./spark";
 
 /** The popup's form fields, as typed. */
 export interface Draft {
+  destination: Destination;
   note: string;
   quote: string;
 }
@@ -32,7 +33,7 @@ export function buildSpark(draft: Draft, page: Page, stamp: Stamp): Built {
   const spark: Spark = {
     v: 1,
     id: stamp.id,
-    destination: "anki",
+    destination: draft.destination,
     note: textOrNull(draft.note),
     quote,
     selection: quote === null ? null : page.selection,

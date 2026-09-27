@@ -11,6 +11,11 @@
   </p>
   <form id="compose">
     <p id="source" class="muted"></p>
+    <fieldset id="destination">
+      <legend>Send to</legend>
+      <label><input type="radio" name="destination" value="anki"> Anki</label>
+      <label><input type="radio" name="destination" value="knowledge-dump"> Knowledge dump</label>
+    </fieldset>
     <label for="note">Note</label>
     <textarea id="note" rows="3" placeholder="What to remember, in your own words"></textarea>
     <div class="label-row">

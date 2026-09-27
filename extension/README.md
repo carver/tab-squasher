@@ -10,6 +10,7 @@ Firefox extension (MV3, TypeScript) for desktop and Android. The popup is where 
   - `send.ts`: one POST to the server.
   - `outbox.ts`: the queue every Spark passes through.
   - `present.ts`: text the popup shows.
+  - `settings.ts`: per-device settings: the server address, and the Destination new Sparks start with (the last one picked in the popup).
 - `src/background.ts` queues, sends and retries: every 5 minutes while anything waits, when the popup opens, and at browser startup.
 - `src/popup/` is the popup UI. It also runs as a tab, `popup.html?tab=<id>`, which is how Android shows it.
 - `src/options/` is the settings page, with the server address.

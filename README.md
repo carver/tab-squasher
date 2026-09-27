@@ -1,6 +1,6 @@
 # tab-squasher
 
-Close browser tabs without losing why you kept them open. A Firefox extension (desktop and Android) saves what a page inspired as a **Spark**: your Note, an optional Quote, and the page it came from. A small server on your laptop keeps every Spark in an **Inbox**, and each Destination pulls its own from there: `../anki-cards` turns Sparks into flashcards, and `../knowledge-dump` files them into a personal knowledge base.
+Close browser tabs without losing why you kept them open. A Firefox extension (desktop and Android) saves what a page inspired as a **Spark**: your Note, an optional Quote, and the page it came from. A small server on your laptop keeps every Spark in an **Inbox**, and each Destination pulls its own from there: `../anki-cards` turns Sparks into flashcards, and `../knowledge-dump` files them into a personal knowledge base. You pick the Destination in the popup when you write the Spark.
 
 Vocabulary is in [CONTEXT.md](CONTEXT.md). Decisions are in [docs/adr](docs/adr). Work is tracked in [GitHub issues](https://github.com/carver/tab-squasher/issues), and [uncertainties.md](uncertainties.md) lists the judgment calls made along the way.
 

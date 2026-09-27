@@ -4,6 +4,8 @@ import { buildSpark, type Page, type Stamp } from "../lib/draft";
 import type { Message, SendResult } from "../lib/messages";
 import type { Entry } from "../lib/outbox";
 import { describeSendResult, domainOf, formatVideoTime, type Tone } from "../lib/present";
+import { saveDestination } from "../lib/settings";
+import { type Destination, isDestination } from "../lib/spark";
 
 type Mode = { kind: "new"; page: Page } | { kind: "edit"; page: Page; stamp: Stamp };
 
@@ -13,6 +15,7 @@ const CHECK_STAMP_ID = "00000000-0000-4000-8000-000000000000";
 const el = {
   form: document.querySelector<HTMLFormElement>("#compose")!,
   source: document.querySelector<HTMLElement>("#source")!,
+  destination: document.querySelector<HTMLFieldSetElement>("#destination")!,
   note: document.querySelector<HTMLTextAreaElement>("#note")!,
   quote: document.querySelector<HTMLTextAreaElement>("#quote")!,
   clearQuote: document.querySelector<HTMLButtonElement>("#clear-quote")!,
@@ -34,11 +37,15 @@ let mode: Mode;
 let hooks: ComposeHooks;
 /** The page this popup is for. Editing an Outbox entry shows that entry's page instead, for a while. */
 let homePage: Page;
+/** Where new Sparks go: the last Destination picked for one, on this device. */
+let homeDestination: Destination;
 
-export function startCompose(page: Page, composeHooks: ComposeHooks): void {
+export function startCompose(page: Page, destination: Destination, composeHooks: ComposeHooks): void {
   hooks = composeHooks;
   homePage = page;
+  homeDestination = destination;
   el.form.addEventListener("input", check);
+  el.destination.addEventListener("change", rememberDestination);
   el.form.addEventListener("submit", (event) => {
     event.preventDefault();
     void submit(false);
@@ -61,19 +68,20 @@ export function startEdit(entry: Entry): void {
     videoSeconds: spark.source.video_seconds,
   };
   mode = { kind: "edit", page, stamp: { id: spark.id, capturedAt: spark.captured_at } };
-  fill(spark.note ?? "", spark.quote ?? "", page);
+  fill(spark.destination, spark.note ?? "", spark.quote ?? "", page);
   showStatus(entry.problem ? `Server said: ${entry.problem}` : "", "bad");
   el.note.focus();
 }
 
 function showNew(page: Page): void {
   mode = { kind: "new", page };
-  fill("", page.selection.trim(), page);
+  fill(homeDestination, "", page.selection.trim(), page);
   showStatus("", "muted");
 }
 
-function fill(note: string, quote: string, page: Page): void {
+function fill(destination: Destination, note: string, quote: string, page: Page): void {
   const editing = mode.kind === "edit";
+  destinationInput(destination).checked = true;
   el.note.value = note;
   el.quote.value = quote;
   el.quote.disabled = page.selection.trim() === "";
@@ -97,8 +105,25 @@ function describeSource(page: Page): string {
   return [...new Set(parts)].join(" · ");
 }
 
+function destinationInput(destination: Destination): HTMLInputElement {
+  return el.destination.querySelector<HTMLInputElement>(`input[value="${destination}"]`)!;
+}
+
+function pickedDestination(): Destination {
+  const value = el.destination.querySelector<HTMLInputElement>("input:checked")?.value;
+  return isDestination(value) ? value : homeDestination;
+}
+
+/** A pick for a new Spark becomes the default; changing an Outbox entry's doesn't. */
+function rememberDestination(): void {
+  if (mode.kind !== "new") return;
+  homeDestination = pickedDestination();
+  void saveDestination(homeDestination);
+}
+
 function build(stamp: Stamp) {
-  return buildSpark({ note: el.note.value, quote: el.quote.value }, mode.page, stamp);
+  const draft = { destination: pickedDestination(), note: el.note.value, quote: el.quote.value };
+  return buildSpark(draft, mode.page, stamp);
 }
 
 function check(): void {
@@ -123,7 +148,7 @@ async function submit(thenClose: boolean): Promise<void> {
   }
   const described = describeSendResult(result);
   mode = { kind: "new", page: homePage };
-  fill("", "", homePage);
+  fill(homeDestination, "", "", homePage);
   showStatus(described.message, described.tone);
   hooks.afterSend(result);
 }

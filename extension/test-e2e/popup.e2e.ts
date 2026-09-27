@@ -121,6 +121,25 @@ describe("sending a Spark", () => {
     expect(server.inbox().at(-1)).toMatchObject({ note: "Backpressure point", source: { video_seconds: 34.5 } });
   });
 
+  it("sends to the Destination picked, and starts the next Spark with the same one", async () => {
+    const picked = (value: string) => driver.findElement(By.css(`input[name=destination][value="${value}"]`)).isSelected();
+    const pick = (label: string) => driver.findElement(By.xpath(`//fieldset[@id='destination']//label[contains(., '${label}')]`)).click();
+    await openPopup(driver, await openPage(driver, `${site.url}/article`));
+    expect(await picked("anki")).toBe(true);
+
+    await pick("Knowledge dump");
+    await driver.findElement(By.css("#note")).sendKeys("For the knowledge dump");
+    await clickAndWaitForTabToClose(driver, "#send");
+    expect(server.inbox().at(-1)).toMatchObject({ note: "For the knowledge dump", destination: "knowledge-dump" });
+
+    await openPopup(driver, await openPage(driver, `${site.url}/article`));
+    expect(await picked("knowledge-dump")).toBe(true);
+    await pick("Anki");
+    await driver.findElement(By.css("#note")).sendKeys("Back to Anki");
+    await clickAndWaitForTabToClose(driver, "#send");
+    expect(server.inbox().at(-1)).toMatchObject({ note: "Back to Anki", destination: "anki" });
+  });
+
   it("won't send without a Note or a Quote, and says why", async () => {
     const tabId = await openPage(driver, `${site.url}/article`);
     await openPopup(driver, tabId);

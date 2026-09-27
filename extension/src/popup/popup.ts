@@ -6,7 +6,7 @@ import { onOutboxChange, readOutbox } from "../lib/outbox-storage";
 import { readPage } from "../lib/page";
 import { sentence } from "../lib/present";
 import { checkServer } from "../lib/server";
-import { loadServerUrl } from "../lib/settings";
+import { loadDestination, loadServerUrl } from "../lib/settings";
 import { startCompose, startEdit } from "./compose";
 import { renderOutbox } from "./outbox-view";
 
@@ -44,7 +44,7 @@ async function main(): Promise<void> {
   const tabId = tab.id!;
   void showServerNotice();
 
-  startCompose(await readPage(tabId), {
+  startCompose(await readPage(tabId), await loadDestination(), {
     afterSend: async (result) => {
       if (tabParam !== null && result.outcome === "sent") {
         await browser.tabs.update(tabId, { active: true });

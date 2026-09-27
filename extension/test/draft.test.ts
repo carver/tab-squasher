@@ -2,7 +2,7 @@ import fc from "fast-check";
 import { describe, expect, it } from "vitest";
 
 import { buildSpark, type Draft, type Page } from "../src/lib/draft";
-import { validateSparkBody } from "../src/lib/spark";
+import { DESTINATIONS, validateSparkBody } from "../src/lib/spark";
 
 const PAGE: Page = {
   url: "https://debezium.io/documentation/reference/stable/architecture.html",
@@ -13,7 +13,7 @@ const PAGE: Page = {
 const STAMP = { id: "3f0c1d9e-6a57-4e57-9d64-2b1b4f0f6c11", capturedAt: "2026-09-24T03:12:45.120Z" };
 
 function build(draft: Partial<Draft>, page: Partial<Page> = {}) {
-  return buildSpark({ note: "", quote: "", ...draft }, { ...PAGE, ...page }, STAMP);
+  return buildSpark({ destination: "anki", note: "", quote: "", ...draft }, { ...PAGE, ...page }, STAMP);
 }
 
 describe("buildSpark", () => {
@@ -31,6 +31,13 @@ describe("buildSpark", () => {
         captured_at: STAMP.capturedAt,
       },
       body: expect.any(String),
+    });
+  });
+
+  it("sends the Spark to the Destination picked in the form", () => {
+    expect(build({ note: "n", destination: "knowledge-dump" })).toMatchObject({
+      ok: true,
+      spark: { destination: "knowledge-dump" },
     });
   });
 
@@ -80,9 +87,10 @@ describe("buildSpark", () => {
       selection: text,
       videoSeconds: fc.option(fc.double(), { nil: null }),
     });
+    const draft = fc.record({ destination: fc.constantFrom(...DESTINATIONS), note: text, quote: text });
     fc.assert(
-      fc.property(fc.record({ note: text, quote: text }), page, (draft, pageInfo) => {
-        const built = buildSpark(draft, pageInfo, STAMP);
+      fc.property(draft, page, (draftInfo, pageInfo) => {
+        const built = buildSpark(draftInfo, pageInfo, STAMP);
         if (built.ok) {
           expect(validateSparkBody(built.body)).toEqual({ ok: true, spark: built.spark });
         } else {
