@@ -21,7 +21,7 @@ In the sandbox, `./install.sh` enables the git hooks, installs npm and Python pa
 On the host:
 
 1. `server/tailscale-wizard.sh` for Tailscale HTTPS and the first server install. After that, `server/install-host.sh` upgrades.
-2. `extension/scripts/amo-wizard.sh` to sign the extension and install it on desktop and Android. After that, `npm run sign` in `extension/`.
+2. `extension/scripts/amo-wizard.sh` to sign the extension and install it on desktop and Android. After that, `extension/scripts/sign.sh`.
 
 ## Development
 

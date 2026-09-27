@@ -36,7 +36,7 @@ The e2e tests open extension pages from Firefox's chrome context, because WebDri
 
 On the host, the first time: `./scripts/amo-wizard.sh`. It gets AMO API credentials and stores them in your keyring with `secret-tool`. It then signs the first version and walks through installing it on desktop and Android.
 
-After that, `npm run sign` on the host bumps the patch version, runs lint and the unit tests, and signs on AMO's unlisted channel. It uploads the source alongside the build, since the bundle is generated from TypeScript. The signed `.xpi` lands in `artifacts/` (gitignored). Commit the version bump afterwards. `./scripts/sign.sh --no-bump` retries a failed attempt without using up a version number.
+After that, `./scripts/sign.sh` on the host bumps the patch version, runs lint and the unit tests, and signs on AMO's unlisted channel. It uploads the source alongside the build, since the bundle is generated from TypeScript. The signed `.xpi` lands in `artifacts/` (gitignored). Commit the version bump afterwards. `./scripts/sign.sh --no-bump` retries a failed attempt without using up a version number.
 
 To install on desktop Firefox:
 

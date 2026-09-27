@@ -10,8 +10,7 @@
     "test": "vitest run",
     "dev:desktop": "npm run -s build && ./scripts/web-ext-run.sh firefox-desktop",
     "dev:android": "npm run -s build && ./scripts/web-ext-run.sh firefox-android",
-    "test:e2e": "vitest run --config vitest.e2e.config.ts",
-    "sign": "./scripts/sign.sh"
+    "test:e2e": "vitest run --config vitest.e2e.config.ts"
   },
   "devDependencies": {
     "@eslint/js": "^10.0.1",
