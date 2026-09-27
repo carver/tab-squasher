@@ -57,7 +57,7 @@ async function openTabIds(): Promise<number> {
 
 describe("settings", () => {
   it("saves the server address and reports the server reachable", async () => {
-    expect(await setServerUrl(driver, `${server.url}/`)).toMatch(/Server 0\.1\.0 is reachable/);
+    expect(await setServerUrl(driver, `${server.url}/`)).toMatch(/Server 0\.2\.0 is reachable/);
   });
 
   it("refuses plain http to anything but this machine", async () => {
